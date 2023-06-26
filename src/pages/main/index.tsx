@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import {WebView, WebViewMessageEvent} from 'react-native-webview';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
+import UserAgent from 'react-native-user-agent';
 
 function HomeScreen({navigation, route}: any): JSX.Element {
   const webViewRef = useRef<any>(null);
@@ -119,7 +120,18 @@ function HomeScreen({navigation, route}: any): JSX.Element {
       outUrl: params.params.url,
       outName: params.params.title,
     });
+    UserAgint();
     postMessageToWeb({...params, model: 200}, value);
+  };
+
+  const UserAgint = () => {
+   
+    UserAgent.getWebViewUserAgent() //asynchronous
+      .then(ua => {console.log(ua);
+      })
+      .catch(e => {});
+
+      
   };
 
   /**
@@ -163,6 +175,8 @@ function HomeScreen({navigation, route}: any): JSX.Element {
         source={{uri: 'file:///android_asset/www/index.html'}}
         // source={{uri: 'http://114.132.187.155:8082/#/tabs'}}
         allowUniversalAccessFromFileURLs={true}
+        userAgent={'DemoApp/1.1.0'}
+        applicationNameForUserAgent={'DemoApp/1.1.0'}
         onMessage={
           onMessage
           //   async (event: any) => {
