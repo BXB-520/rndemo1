@@ -6,6 +6,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import HomeScreen from './src/pages/main';
 import Qrcode from './src/pages/qrcode';
+import WebViews from './src/pages/webview';
 
 // function HomeScreen({navigation}) {
 //   return (
@@ -55,6 +56,11 @@ function App() {
         <Stack.Screen
           name="Qrcode"
           component={Qrcode}
+          options={{headerShown: false, headerTransparent: true}}
+        />
+        <Stack.Screen
+          name="Webview"
+          component={WebViews}
           options={{headerShown: false, headerTransparent: true}}
         />
       </Stack.Navigator>

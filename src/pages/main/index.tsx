@@ -8,22 +8,21 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {
   BackHandler,
-  Button,
   SafeAreaView,
   StatusBar,
   StyleSheet,
-  Text,
   ToastAndroid,
   useColorScheme,
-  View,
 } from 'react-native';
-import {RNCamera} from 'react-native-camera';
-import {WebView} from 'react-native-webview';
+import {WebView, WebViewMessageEvent} from 'react-native-webview';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
-import QRCodeScanner from 'react-native-qrcode-scanner';
-import Qrcode from '../qrcode';
 
-function HomeScreen({navigation, route}): JSX.Element {
+function HomeScreen({navigation, route}: any): JSX.Element {
+  const webViewRef = useRef<any>(null);
+
+  const [canGoBack, setcanGoBack] = useState(false);
+  const [levl, setlevl] = useState(false);
+
   const isDarkMode = useColorScheme() === 'dark';
 
   const backgroundStyle = {
@@ -31,28 +30,22 @@ function HomeScreen({navigation, route}): JSX.Element {
     flex: 1,
   };
 
-  const [canGoBack, setcanGoBack] = useState(false);
-  const [levl, setlevl] = useState(false);
-
   useEffect(() => {
     if (route.params?.qrcodeBackData) {
       console.log('route.params?.qrcodeBackData', route.params?.qrcodeBackData);
       webViewRef.current?.postMessage(
         JSON.stringify({qrcodeBackData: route.params?.qrcodeBackData}),
       );
-      // Post updated, do something with `route.params.post`
-      // For example, send the post to the server
     }
   }, [route.params?.qrcodeBackData]);
 
+  /** 控制系统路由返回 */
   useEffect(() => {
     let backHandlerPressedCount: number = 0;
     const backHandler = BackHandler.addEventListener(
       'hardwareBackPress',
       () => {
         if (backHandlerPressedCount < 1) {
-          console.log('canGoBack', canGoBack, webViewRef.current);
-
           if (canGoBack) {
             if (levl) {
               setlevl(false);
@@ -79,29 +72,79 @@ function HomeScreen({navigation, route}): JSX.Element {
     return () => backHandler.remove();
   }, [canGoBack, levl]);
 
-  // 组件的其他代码
+  /** 到首页执行 */
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      setlevl(false);
+    });
+    return unsubscribe;
+  }, [navigation]);
 
-  const webViewRef = useRef(null);
-
-  const handleNavigationStateChange = navState => {
+  /** webview路由变化执行 */
+  const handleNavigationStateChange = (navState: {canGoBack: boolean}) => {
     setcanGoBack(!navState.canGoBack);
   };
 
-  const cameraRef = React.useRef(null);
-  const takePicture = async () => {
-    setlevl(true);
-    navigation.push('Qrcode');
+  const onMessage = (event: WebViewMessageEvent) => {
+    let data = event.nativeEvent.data;
+    console.log('onMessage ', event.nativeEvent.data);
+    let params = null;
+    try {
+      params = JSON.parse(data);
+    } catch (e) {
+      console.warn('json parse error!! data = ' + data);
+    }
+    if (!params) {
+      return;
+    }
+    // 可以根据params.modelName来判断处理什么业务
+    disposeWebMessage(params);
   };
 
-  const handleQRCodeScanned = ({data}) => {
-    console.log(data);
-    webViewRef.current?.postMessage(data);
+  const disposeWebMessage = params => {
+    console.log(params.modelName);
+
+    switch (params.modelName) {
+      case 'Webview':
+        Webview(params);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const Webview = params => {
+    const value = true;
+    navigation.navigate('Webview', {
+      outUrl: params.params.url,
+      outName: params.params.title,
+    });
+    postMessageToWeb({...params, model: 200}, value);
+  };
+
+  /**
+   * 封装了webview进行函数回调的方式
+   * params   H5调用时候的参数，包含了functionId和modelName
+   * value	需要返回的value对象
+   */
+  const postMessageToWeb = (params, value) => {
+    let response = {
+      model: params.model,
+      functionId: params.functionId,
+      value: value ? value : undefined,
+      status: value?.status ? value?.status : '0', //默认都返回0表示js-sdk调用成功，当value中有status时，则使用value中的status
+      message: `${params.model}:ok`,
+    };
+    let responseStr = JSON.stringify(response);
+    const jsString = `(function() {window.RN_WebViewBridge && window.RN_WebViewBridge.onMessage(${responseStr});})()`;
+    console.log(jsString);
+    webViewRef.current?.injectJavaScript(jsString);
   };
 
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar backgroundColor={'#ffffff00'} translucent={true} />
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <Text style={styles.title}>My WebView Title</Text>
       </View>
 
@@ -111,104 +154,44 @@ function HomeScreen({navigation, route}): JSX.Element {
           setlevl(true);
           navigation.push('Qrcode');
         }}
-      />
-
-      {/* <QRCodeScanner
-        onRead={handleQRCodeScanned}
-        containerStyle={{flex: 1}}
-        cameraStyle={{height: 200}}
-      /> */}
-
-      {/* <RNCamera
-        ref={cameraRef}
-        style={{height: 50}}
-        type={RNCamera.Constants.Type.back}
-        flashMode={RNCamera.Constants.FlashMode.off}
       /> */}
 
       <WebView
         ref={webViewRef}
-        originWhitelist={['http://114.132.187.155:8082']}
+        // originWhitelist={['http://114.132.187.155:8082']}
         onNavigationStateChange={handleNavigationStateChange}
         source={{uri: 'file:///android_asset/www/index.html'}}
         // source={{uri: 'http://114.132.187.155:8082/#/tabs'}}
         allowUniversalAccessFromFileURLs={true}
-        onMessage={async (event: any) => {
-          const msg = JSON.parse(event.nativeEvent.data);
-          switch (msg.type) {
-            case 'Qrcode':
-              console.log('Qrcode');
-              setlevl(true);
-              navigation.push('Qrcode');
-              break;
+        onMessage={
+          onMessage
+          //   async (event: any) => {
+          //   const msg = JSON.parse(event.nativeEvent.data);
+          //   switch (msg?.type) {
+          //     case 'Qrcode':
+          //       console.log('Qrcode');
+          //       setlevl(true);
+          //       navigation.push('Qrcode');
+          //       break;
+          //     case 'Webview':
+          //       console.log('Webview');
+          //       setlevl(true);
+          //       navigation.navigate('Webview', {
+          //         outUrl: msg?.data,
+          //       });
 
-            default:
-              break;
-          }
-          // if (msg.type === 'SAVE_IMAGE') {
-          //   // save image here
-          //   console.log("lail");
+          //       break;
+
+          //     default:
+          //       break;
+          //   }
           // }
-        }}
+        }
         // eslint-disable-next-line react-native/no-inline-styles
         style={{flex: 1}}
       />
-      {/* <WebView
-        ref={webViewRef}
-        onNavigationStateChange={handleNavigationStateChange}
-        source={{uri: 'file:///android_asset/www/index.html'}}
-        // source={{uri: 'http://114.132.187.155:8082/#/tabs'}}
-        onMessage={async (event: any) => {
-          const msg = JSON.parse(event.nativeEvent.data);
-          switch (msg.type) {
-            case 'Qrcode':
-              console.log('Qrcode');
-              setlevl(true);
-              navigation.push('Qrcode');
-              break;
-
-            default:
-              break;
-          }
-          // if (msg.type === 'SAVE_IMAGE') {
-          //   // save image here
-          //   console.log("lail");
-          // }
-        }}
-        // eslint-disable-next-line react-native/no-inline-styles
-        style={{flex: 1}}
-      /> */}
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  header: {
-    height: 50,
-    backgroundColor: '#f2f2f2',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
 
 export default HomeScreen;

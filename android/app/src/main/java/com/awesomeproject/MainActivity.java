@@ -1,4 +1,4 @@
-package com.awesomeproject;
+package com.reactnative.qccq;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
