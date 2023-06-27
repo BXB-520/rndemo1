@@ -53,11 +53,11 @@ function App() {
           options={{headerShown: false}}
         />
         <Stack.Screen name="Details" component={DetailsScreen} />
-        <Stack.Screen
+        {/* <Stack.Screen
           name="Qrcode"
           component={Qrcode}
           options={{headerShown: false, headerTransparent: true}}
-        />
+        /> */}
         <Stack.Screen
           name="Webview"
           component={WebViews}

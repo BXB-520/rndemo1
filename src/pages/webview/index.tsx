@@ -74,7 +74,7 @@ function WebViews({navigation, route}: any): JSX.Element {
   };
 
   return (
-    <SafeAreaView style={backgroundStyle}>
+    <View style={backgroundStyle}>
       <StatusBar backgroundColor={'#ffffff00'} translucent={true} />
       <View style={styles.header}>
         <LinearGradient
@@ -130,14 +130,14 @@ function WebViews({navigation, route}: any): JSX.Element {
         // eslint-disable-next-line react-native/no-inline-styles
         style={{flex: 1}}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   header: {
-    paddingTop: 30,
-    height: 74,
+    paddingTop: 40,
+    height: 90,
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
@@ -155,19 +155,21 @@ const styles = StyleSheet.create({
   },
   back: {
     position: 'absolute',
-    top: 40,
+    top: 55,
     left: 12,
     color: '#ffffff',
     width: 40,
     height: 40,
+    fontFamily:"PingFang SC"
   },
   close: {
     position: 'absolute',
-    top: 40,
+    top: 55,
     left: 50,
     color: '#ffffff',
     width: 40,
     height: 40,
+    fontFamily:"PingFang SC"
   },
 });
 

@@ -1,4 +1,7 @@
 {
   "name": "AwesomeProject",
-  "displayName": "AwesomeProject"
+  "displayName": "AwesomeProject",
+  "packagerOpts": {
+    "config": "metro.config.js"
+  }
 }

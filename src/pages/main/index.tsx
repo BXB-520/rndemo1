@@ -5,20 +5,23 @@
  * @format
  */
 
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   BackHandler,
+  Button,
   SafeAreaView,
   StatusBar,
   StyleSheet,
   ToastAndroid,
+  View,
   useColorScheme,
 } from 'react-native';
-import {WebView, WebViewMessageEvent} from 'react-native-webview';
-import {Colors} from 'react-native/Libraries/NewAppScreen';
+import { WebView, WebViewMessageEvent } from 'react-native-webview';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
 import UserAgent from 'react-native-user-agent';
+import { Platform } from 'react-native';
 
-function HomeScreen({navigation, route}: any): JSX.Element {
+function HomeScreen({ navigation, route }: any): JSX.Element {
   const webViewRef = useRef<any>(null);
 
   const [canGoBack, setcanGoBack] = useState(false);
@@ -35,7 +38,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
     if (route.params?.qrcodeBackData) {
       console.log('route.params?.qrcodeBackData', route.params?.qrcodeBackData);
       webViewRef.current?.postMessage(
-        JSON.stringify({qrcodeBackData: route.params?.qrcodeBackData}),
+        JSON.stringify({ qrcodeBackData: route.params?.qrcodeBackData }),
       );
     }
   }, [route.params?.qrcodeBackData]);
@@ -82,7 +85,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
   }, [navigation]);
 
   /** webview路由变化执行 */
-  const handleNavigationStateChange = (navState: {canGoBack: boolean}) => {
+  const handleNavigationStateChange = (navState: { canGoBack: boolean }) => {
     setcanGoBack(!navState.canGoBack);
   };
 
@@ -121,17 +124,18 @@ function HomeScreen({navigation, route}: any): JSX.Element {
       outName: params.params.title,
     });
     UserAgint();
-    postMessageToWeb({...params, model: 200}, value);
+    postMessageToWeb({ ...params, model: 200 }, value);
   };
 
   const UserAgint = () => {
-   
-    UserAgent.getWebViewUserAgent() //asynchronous
-      .then(ua => {console.log(ua);
-      })
-      .catch(e => {});
 
-      
+    UserAgent.getWebViewUserAgent() //asynchronous
+      .then(ua => {
+        console.log(ua);
+      })
+      .catch(e => { });
+
+
   };
 
   /**
@@ -154,13 +158,13 @@ function HomeScreen({navigation, route}: any): JSX.Element {
   };
 
   return (
-    <SafeAreaView style={backgroundStyle}>
+    <View style={backgroundStyle}>
       <StatusBar backgroundColor={'#ffffff00'} translucent={true} />
       {/* <View style={styles.header}>
         <Text style={styles.title}>My WebView Title</Text>
-      </View>
+      </View> */}
 
-      <Button
+      {/* <Button
         title="Go to Details"
         onPress={() => {
           setlevl(true);
@@ -170,10 +174,16 @@ function HomeScreen({navigation, route}: any): JSX.Element {
 
       <WebView
         ref={webViewRef}
-        // originWhitelist={['http://114.132.187.155:8082']}
+        originWhitelist={['*']}
+        javaScriptEnabled={true}
         onNavigationStateChange={handleNavigationStateChange}
-        source={{uri: 'file:///android_asset/www/index.html'}}
-        // source={{uri: 'http://114.132.187.155:8082/#/tabs'}}
+        //source={{uri: 'file:///android_asset/www/index.html'}}
+        //source={{uri: 'http://114.132.187.155:8082/#/tabs'}}
+        source={(Platform.OS == 'ios') ? require('../../assets/www/index.html') : {
+          uri: "file:///android_asset/www/index.html"
+        }}
+        useWebKit={true}
+        allowFileAccessFromFileURLs={true}
         allowUniversalAccessFromFileURLs={true}
         userAgent={'DemoApp/1.1.0'}
         applicationNameForUserAgent={'DemoApp/1.1.0'}
@@ -202,9 +212,9 @@ function HomeScreen({navigation, route}: any): JSX.Element {
           // }
         }
         // eslint-disable-next-line react-native/no-inline-styles
-        style={{flex: 1}}
+        style={{ flex: 1 }}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
