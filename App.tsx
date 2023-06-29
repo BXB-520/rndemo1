@@ -7,6 +7,8 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import HomeScreen from './src/pages/main';
 import Qrcode from './src/pages/qrcode';
 import WebViews from './src/pages/webview';
+import Camera from './src/pages/camera';
+import CheckPicture from './src/pages/checkPicture';
 
 // function HomeScreen({navigation}) {
 //   return (
@@ -58,6 +60,12 @@ function App() {
           component={Qrcode}
           options={{headerShown: false, headerTransparent: true}}
         /> */}
+
+        <Stack.Screen
+          name="CheckPicture"
+          component={CheckPicture}
+          options={{headerShown: false, headerTransparent: true}}
+        />
         <Stack.Screen
           name="Webview"
           component={WebViews}

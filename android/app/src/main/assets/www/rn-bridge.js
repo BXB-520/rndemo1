@@ -44,3 +44,13 @@ function requestRN(modelName, requestParams) {
     // 将请求通过postMessage发送给RN客户端
     window.ReactNativeWebView.postMessage(JSON.stringify(requestParams));
 }
+
+var statusBarHeight=0;
+
+requestRN('StatusBarHeight', {
+    params: {},
+    success: (value) => {
+      console.log(value.statusBarHeight);
+      statusBarHeight=value.statusBarHeight
+    },
+});

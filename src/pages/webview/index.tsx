@@ -136,8 +136,8 @@ function WebViews({navigation, route}: any): JSX.Element {
 
 const styles = StyleSheet.create({
   header: {
-    paddingTop: 40,
-    height: 90,
+    paddingTop: StatusBar.currentHeight,
+    height: 80,
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
@@ -155,21 +155,19 @@ const styles = StyleSheet.create({
   },
   back: {
     position: 'absolute',
-    top: 55,
+    top: 45,
     left: 12,
     color: '#ffffff',
     width: 40,
     height: 40,
-    fontFamily:"PingFang SC"
   },
   close: {
     position: 'absolute',
-    top: 55,
+    top: 45,
     left: 50,
     color: '#ffffff',
     width: 40,
     height: 40,
-    fontFamily:"PingFang SC"
   },
 });
 

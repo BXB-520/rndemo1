@@ -5,27 +5,37 @@
  * @format
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   BackHandler,
   Button,
+  Image,
   SafeAreaView,
+  ScrollView,
   StatusBar,
   StyleSheet,
+  Text,
   ToastAndroid,
   View,
   useColorScheme,
 } from 'react-native';
-import { WebView, WebViewMessageEvent } from 'react-native-webview';
-import { Colors } from 'react-native/Libraries/NewAppScreen';
+import {WebView, WebViewMessageEvent} from 'react-native-webview';
+import {Colors} from 'react-native/Libraries/NewAppScreen';
 import UserAgent from 'react-native-user-agent';
-import { Platform } from 'react-native';
+import {Platform} from 'react-native';
+import {CameraRoll} from '@react-native-camera-roll/camera-roll';
+import {hasAndroidPermission} from '../../hooks/picturePromise';
+import RNFS from 'react-native-fs';
+import CheckPicture from '../checkPicture';
 
-function HomeScreen({ navigation, route }: any): JSX.Element {
+function HomeScreen({navigation, route}: any): JSX.Element {
   const webViewRef = useRef<any>(null);
+
+  const nowParams = useRef<any>(null);
 
   const [canGoBack, setcanGoBack] = useState(false);
   const [levl, setlevl] = useState(false);
+  const [visible, setvisible] = useState(false);
 
   const isDarkMode = useColorScheme() === 'dark';
 
@@ -35,13 +45,22 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
   };
 
   useEffect(() => {
+    console.log('88888888888', route.params);
+
     if (route.params?.qrcodeBackData) {
       console.log('route.params?.qrcodeBackData', route.params?.qrcodeBackData);
       webViewRef.current?.postMessage(
-        JSON.stringify({ qrcodeBackData: route.params?.qrcodeBackData }),
+        JSON.stringify({qrcodeBackData: route.params?.qrcodeBackData}),
       );
     }
-  }, [route.params?.qrcodeBackData]);
+
+    if (route.params?.pictureList) {
+      postMessageToWeb(
+        {...nowParams.current, model: 200},
+        {pictureList: route.params?.pictureList},
+      );
+    }
+  }, [route.params]);
 
   /** 控制系统路由返回 */
   useEffect(() => {
@@ -53,7 +72,12 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
           if (canGoBack) {
             if (levl) {
               setlevl(false);
-              return false;
+              if (visible) {
+                setvisible(false);
+                return true;
+              } else {
+                return false;
+              }
             }
             backHandlerPressedCount++;
             ToastAndroid.show('再按一次退出应用', ToastAndroid.SHORT);
@@ -74,7 +98,7 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
     );
 
     return () => backHandler.remove();
-  }, [canGoBack, levl]);
+  }, [canGoBack, levl, visible]);
 
   /** 到首页执行 */
   useEffect(() => {
@@ -85,7 +109,7 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
   }, [navigation]);
 
   /** webview路由变化执行 */
-  const handleNavigationStateChange = (navState: { canGoBack: boolean }) => {
+  const handleNavigationStateChange = (navState: {canGoBack: boolean}) => {
     setcanGoBack(!navState.canGoBack);
   };
 
@@ -107,10 +131,15 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
 
   const disposeWebMessage = params => {
     console.log(params.modelName);
-
     switch (params.modelName) {
       case 'Webview':
         Webview(params);
+        break;
+      case 'StatusBarHeight':
+        StatusBarHeight(params);
+        break;
+      case 'CheckPicture':
+        CheckPicture(params);
         break;
       default:
         break;
@@ -119,23 +148,26 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
 
   const Webview = params => {
     const value = true;
+    setlevl(true);
     navigation.navigate('Webview', {
       outUrl: params.params.url,
       outName: params.params.title,
     });
-    UserAgint();
-    postMessageToWeb({ ...params, model: 200 }, value);
+
+    postMessageToWeb({...params, model: 200}, value);
   };
 
-  const UserAgint = () => {
+  const StatusBarHeight = params => {
+    const value = {
+      statusBarHeight: StatusBar.currentHeight,
+    };
+    postMessageToWeb({...params, model: 200}, value);
+  };
 
-    UserAgent.getWebViewUserAgent() //asynchronous
-      .then(ua => {
-        console.log(ua);
-      })
-      .catch(e => { });
-
-
+  const CheckPicture = params => {
+    setlevl(true);
+    navigation.navigate('CheckPicture', {});
+    nowParams.current = params;
   };
 
   /**
@@ -155,64 +187,45 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
     const jsString = `(function() {window.RN_WebViewBridge && window.RN_WebViewBridge.onMessage(${responseStr});})()`;
     console.log(jsString);
     webViewRef.current?.injectJavaScript(jsString);
+    nowParams.current = null;
   };
 
   return (
     <View style={backgroundStyle}>
       <StatusBar backgroundColor={'#ffffff00'} translucent={true} />
-      {/* <View style={styles.header}>
-        <Text style={styles.title}>My WebView Title</Text>
-      </View> */}
+      <View>
+        <Text>My WebView Title</Text>
+      </View>
 
-      {/* <Button
+      <Button
         title="Go to Details"
-        onPress={() => {
+        onPress={async () => {
           setlevl(true);
-          navigation.push('Qrcode');
+          navigation.navigate('CheckPicture', {});
         }}
-      /> */}
+      />
 
       <WebView
         ref={webViewRef}
         originWhitelist={['*']}
         javaScriptEnabled={true}
         onNavigationStateChange={handleNavigationStateChange}
-        //source={{uri: 'file:///android_asset/www/index.html'}}
         //source={{uri: 'http://114.132.187.155:8082/#/tabs'}}
-        source={(Platform.OS == 'ios') ? require('../../assets/www/index.html') : {
-          uri: "file:///android_asset/www/index.html"
-        }}
+        source={
+          Platform.OS === 'ios'
+            ? require('../../assets/www/index.html')
+            : {
+                uri: 'file:///android_asset/www/index.html',
+              }
+        }
         useWebKit={true}
         allowFileAccessFromFileURLs={true}
         allowUniversalAccessFromFileURLs={true}
         userAgent={'DemoApp/1.1.0'}
         applicationNameForUserAgent={'DemoApp/1.1.0'}
-        onMessage={
-          onMessage
-          //   async (event: any) => {
-          //   const msg = JSON.parse(event.nativeEvent.data);
-          //   switch (msg?.type) {
-          //     case 'Qrcode':
-          //       console.log('Qrcode');
-          //       setlevl(true);
-          //       navigation.push('Qrcode');
-          //       break;
-          //     case 'Webview':
-          //       console.log('Webview');
-          //       setlevl(true);
-          //       navigation.navigate('Webview', {
-          //         outUrl: msg?.data,
-          //       });
-
-          //       break;
-
-          //     default:
-          //       break;
-          //   }
-          // }
-        }
+        onMessage={onMessage}
         // eslint-disable-next-line react-native/no-inline-styles
-        style={{ flex: 1 }}
+        style={{flex: 1}}
       />
     </View>
   );
