@@ -6,10 +6,11 @@
  * @format
  */
 
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Button,
   Image,
+  NativeModules,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -19,19 +20,21 @@ import {
   View,
   useColorScheme,
 } from 'react-native';
-import {Colors} from 'react-native/Libraries/NewAppScreen';
-import {Platform} from 'react-native';
-import {CameraRoll} from '@react-native-camera-roll/camera-roll';
-import {hasAndroidPermission} from '../../hooks/picturePromise';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
+import { Platform } from 'react-native';
+import { CameraRoll } from '@react-native-camera-roll/camera-roll';
+import { hasAndroidPermission } from '../../hooks/picturePromise';
 import RNFS from 'react-native-fs';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
 import LinearGradient from 'react-native-linear-gradient';
 import ImageResizer from 'react-native-image-resizer';
 
+const { StatusBarManager } = NativeModules;
+
 const maxNumber = 60;
 
-function CheckPicture({navigation}: any): JSX.Element {
+function CheckPicture({ navigation }: any): JSX.Element {
   const [isResizer, setIsResizer] = useState<boolean>(true);
   const [allPhotos, setAllPhotos] = useState<any[]>([]);
   const [checkPhotos, setCheckPhotos] = useState<any[]>([]);
@@ -58,7 +61,7 @@ function CheckPicture({navigation}: any): JSX.Element {
       assetType: 'Photos',
       include: ['imageSize'],
     })
-      .then((rusult: {edges: any}) => {
+      .then((rusult: { edges: any }) => {
         setAllPhotos(rusult.edges);
       })
       .catch(err => {
@@ -102,7 +105,7 @@ function CheckPicture({navigation}: any): JSX.Element {
               file: image,
               id: prevCheckPhotos.length.toString(),
             },
-          ].map((item, index) => ({...item, id: index.toString()})),
+          ].map((item, index) => ({ ...item, id: index.toString() })),
         ); // 更新id的值
       } else {
         ToastAndroid.show('最多选择6张图片！', ToastAndroid.SHORT);
@@ -132,7 +135,7 @@ function CheckPicture({navigation}: any): JSX.Element {
 
                 navigation.navigate({
                   name: 'Home',
-                  params: {pictureList: checkedPhotos},
+                  params: { pictureList: checkedPhotos },
                   merge: true,
                 });
               }
@@ -168,7 +171,7 @@ function CheckPicture({navigation}: any): JSX.Element {
       </View>
 
       <ScrollView contentContainerStyle={styles.bg}>
-        {allPhotos.map((photo: {node: {image: {uri: string}}}, index) => {
+        {allPhotos.map((photo: { node: { image: { uri: string } } }, index) => {
           return (
             <TouchableWithoutFeedback
               key={index}
@@ -183,7 +186,9 @@ function CheckPicture({navigation}: any): JSX.Element {
                         style={{
                           color: '#ffffff',
                           flex: 1,
-                          textAlign: 'center',
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center"
                         }}>
                         {+checkPhotos.find(
                           (items: any) =>
@@ -198,7 +203,7 @@ function CheckPicture({navigation}: any): JSX.Element {
                 )}
                 <Image
                   style={styles.image}
-                  source={{uri: photo.node.image.uri}}
+                  source={{ uri: photo.node.image.uri }}
                 />
               </View>
             </TouchableWithoutFeedback>
@@ -215,7 +220,7 @@ function CheckPicture({navigation}: any): JSX.Element {
               <View style={styles.bottomCheck} />
             ) : (
               <View style={styles.bottomChecked}>
-                <Feather style={{color: '#ffffff'}} name="check" size={14} />
+                <Feather style={{ color: '#ffffff' }} name="check" size={14} />
               </View>
             )}
 
@@ -226,9 +231,8 @@ function CheckPicture({navigation}: any): JSX.Element {
         <View style={styles.bottomButton}>
           <Button
             disabled={!checkPhotos.length}
-            title={`   发送${
-              checkPhotos.length ? '(' + checkPhotos.length + ')  ' : '   '
-            }`}
+            title={`   发送${checkPhotos.length ? '(' + checkPhotos.length + ')  ' : '   '
+              }`}
             onPress={() => handelSend()}
           />
         </View>
@@ -301,7 +305,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   header: {
-    paddingTop: StatusBar.currentHeight,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : StatusBarManager.HEIGHT,
     height: 80,
     width: '100%',
     justifyContent: 'center',
@@ -331,12 +335,12 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     width: '100%',
-    height: 70,
-    zIndex: 1010,
+    height: 80,
+    zIndex: 100,
     backgroundColor: 'white',
     display: 'flex',
     flexDirection: 'row',
-    justifyContent: 'center',
+    // justifyContent: 'center',
     alignSelf: 'center',
   },
   bottomText: {

@@ -5,10 +5,12 @@
  * @format
  */
 
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   BackHandler,
   Button,
+  NativeModules,
+  Platform,
   SafeAreaView,
   StatusBar,
   StyleSheet,
@@ -19,11 +21,13 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import {WebView} from 'react-native-webview';
-import {Colors} from 'react-native/Libraries/NewAppScreen';
+import { WebView } from 'react-native-webview';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
 
-function WebViews({navigation, route}: any): JSX.Element {
-  const {outUrl, outName} = route.params;
+const { StatusBarManager } = NativeModules;
+
+function WebViews({ navigation, route }: any): JSX.Element {
+  const { outUrl, outName } = route.params;
 
   const webViewRef = useRef<any>(null);
 
@@ -41,7 +45,7 @@ function WebViews({navigation, route}: any): JSX.Element {
     if (route.params?.qrcodeBackData) {
       console.log('route.params?.qrcodeBackData', route.params?.qrcodeBackData);
       webViewRef.current?.postMessage(
-        JSON.stringify({qrcodeBackData: route.params?.qrcodeBackData}),
+        JSON.stringify({ qrcodeBackData: route.params?.qrcodeBackData }),
       );
     }
   }, [route.params?.qrcodeBackData]);
@@ -69,7 +73,7 @@ function WebViews({navigation, route}: any): JSX.Element {
 
   // 组件的其他代码
 
-  const handleNavigationStateChange = (navState: {canGoBack: boolean}) => {
+  const handleNavigationStateChange = (navState: { canGoBack: boolean }) => {
     setcanGoBack(!navState.canGoBack);
   };
 
@@ -107,7 +111,7 @@ function WebViews({navigation, route}: any): JSX.Element {
       <WebView
         ref={webViewRef}
         onNavigationStateChange={handleNavigationStateChange}
-        source={{uri: outUrl}}
+        source={{ uri: outUrl }}
         allowUniversalAccessFromFileURLs={true}
         // onMessage={async (event: any) => {
         //   const msg = JSON.parse(event.nativeEvent.data);
@@ -128,7 +132,7 @@ function WebViews({navigation, route}: any): JSX.Element {
         //   }
         // }}
         // eslint-disable-next-line react-native/no-inline-styles
-        style={{flex: 1}}
+        style={{ flex: 1 }}
       />
     </View>
   );
@@ -136,7 +140,7 @@ function WebViews({navigation, route}: any): JSX.Element {
 
 const styles = StyleSheet.create({
   header: {
-    paddingTop: StatusBar.currentHeight,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : StatusBarManager.HEIGHT,
     height: 80,
     width: '100%',
     justifyContent: 'center',
