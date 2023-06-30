@@ -5,11 +5,12 @@
  * @format
  */
 
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   BackHandler,
   Button,
   Image,
+  NativeModules,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -19,17 +20,19 @@ import {
   View,
   useColorScheme,
 } from 'react-native';
-import {WebView, WebViewMessageEvent} from 'react-native-webview';
-import {Colors} from 'react-native/Libraries/NewAppScreen';
+import { WebView, WebViewMessageEvent } from 'react-native-webview';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
 import UserAgent from 'react-native-user-agent';
-import {Platform} from 'react-native';
-import {CameraRoll} from '@react-native-camera-roll/camera-roll';
-import {hasAndroidPermission, savePicture} from '../../hooks/picturePromise';
+import { Platform } from 'react-native';
+import { CameraRoll } from '@react-native-camera-roll/camera-roll';
+import { hasAndroidPermission, savePicture } from '../../hooks/picturePromise';
 import RNFS from 'react-native-fs';
 import CheckPicture from '../checkPicture';
-import {DownloadImage} from '../../hooks/downloadPicture';
+import { DownloadImage } from '../../hooks/downloadPicture';
 
-function HomeScreen({navigation, route}: any): JSX.Element {
+const { StatusBarManager } = NativeModules;
+
+function HomeScreen({ navigation, route }: any): JSX.Element {
   const webViewRef = useRef<any>(null);
 
   const nowParams = useRef<any>(null);
@@ -51,14 +54,14 @@ function HomeScreen({navigation, route}: any): JSX.Element {
     if (route.params?.qrcodeBackData) {
       console.log('route.params?.qrcodeBackData', route.params?.qrcodeBackData);
       webViewRef.current?.postMessage(
-        JSON.stringify({qrcodeBackData: route.params?.qrcodeBackData}),
+        JSON.stringify({ qrcodeBackData: route.params?.qrcodeBackData }),
       );
     }
 
     if (route.params?.pictureList) {
       postMessageToWeb(
-        {...nowParams.current, model: 200},
-        {pictureList: route.params?.pictureList},
+        { ...nowParams.current, model: 200 },
+        { pictureList: route.params?.pictureList },
       );
     }
   }, [route.params]);
@@ -110,7 +113,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
   }, [navigation]);
 
   /** webview路由变化执行 */
-  const handleNavigationStateChange = (navState: {canGoBack: boolean}) => {
+  const handleNavigationStateChange = (navState: { canGoBack: boolean }) => {
     setcanGoBack(!navState.canGoBack);
   };
 
@@ -159,14 +162,14 @@ function HomeScreen({navigation, route}: any): JSX.Element {
       outUrl: params.params.url,
       outName: params.params.title,
     });
-    postMessageToWeb({...params, model: 200}, value);
+    postMessageToWeb({ ...params, model: 200 }, value);
   };
   /** 通知状态栏高度 */
   const handelStatusBarHeight = (params: any) => {
     const value = {
-      statusBarHeight: StatusBar.currentHeight,
+      statusBarHeight: Platform.OS === 'android' ? StatusBar.currentHeight : StatusBarManager.HEIGHT,
     };
-    postMessageToWeb({...params, model: 200}, value);
+    postMessageToWeb({ ...params, model: 200 }, value);
   };
   /** 打开图片并选择 */
   const handelCheckPicture = (params: any) => {
@@ -178,7 +181,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
   const handelDelHistory = (params: any) => {
     const value = true;
     setcanGoBack(true);
-    postMessageToWeb({...params, model: 200}, value);
+    postMessageToWeb({ ...params, model: 200 }, value);
   };
 
   /**
@@ -207,6 +210,12 @@ function HomeScreen({navigation, route}: any): JSX.Element {
       <View>
         <Text>My WebView Title</Text>
       </View>
+      <View>
+        <Text>My WebView Title</Text>
+      </View>
+      <View>
+        <Text>My WebView Title</Text>
+      </View>
 
       <Button
         title="Go to Details"
@@ -228,8 +237,8 @@ function HomeScreen({navigation, route}: any): JSX.Element {
           Platform.OS === 'ios'
             ? require('../../assets/www/index.html')
             : {
-                uri: 'file:///android_asset/www/index.html',
-              }
+              uri: 'file:///android_asset/www/index.html',
+            }
         }
         useWebKit={true}
         allowFileAccessFromFileURLs={true}
@@ -238,7 +247,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
         applicationNameForUserAgent={'DemoApp/1.1.0'}
         onMessage={onMessage}
         // eslint-disable-next-line react-native/no-inline-styles
-        style={{flex: 1}}
+        style={{ flex: 1 }}
       />
     </View>
   );
