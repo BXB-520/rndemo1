@@ -24,9 +24,10 @@ import {Colors} from 'react-native/Libraries/NewAppScreen';
 import UserAgent from 'react-native-user-agent';
 import {Platform} from 'react-native';
 import {CameraRoll} from '@react-native-camera-roll/camera-roll';
-import {hasAndroidPermission} from '../../hooks/picturePromise';
+import {hasAndroidPermission, savePicture} from '../../hooks/picturePromise';
 import RNFS from 'react-native-fs';
 import CheckPicture from '../checkPicture';
+import {DownloadImage} from '../../hooks/downloadPicture';
 
 function HomeScreen({navigation, route}: any): JSX.Element {
   const webViewRef = useRef<any>(null);
@@ -129,45 +130,55 @@ function HomeScreen({navigation, route}: any): JSX.Element {
     disposeWebMessage(params);
   };
 
-  const disposeWebMessage = params => {
+  const disposeWebMessage = (params: any) => {
     console.log(params.modelName);
     switch (params.modelName) {
       case 'Webview':
-        Webview(params);
+        handelWebview(params);
         break;
       case 'StatusBarHeight':
-        StatusBarHeight(params);
+        handelStatusBarHeight(params);
         break;
       case 'CheckPicture':
-        CheckPicture(params);
+        handelCheckPicture(params);
         break;
+      case 'DelHistory':
+        handelDelHistory(params);
+        break;
+
       default:
         break;
     }
   };
 
-  const Webview = params => {
+  /** 打开webview */
+  const handelWebview = (params: any) => {
     const value = true;
     setlevl(true);
     navigation.navigate('Webview', {
       outUrl: params.params.url,
       outName: params.params.title,
     });
-
     postMessageToWeb({...params, model: 200}, value);
   };
-
-  const StatusBarHeight = params => {
+  /** 通知状态栏高度 */
+  const handelStatusBarHeight = (params: any) => {
     const value = {
       statusBarHeight: StatusBar.currentHeight,
     };
     postMessageToWeb({...params, model: 200}, value);
   };
-
-  const CheckPicture = params => {
+  /** 打开图片并选择 */
+  const handelCheckPicture = (params: any) => {
     setlevl(true);
     navigation.navigate('CheckPicture', {});
     nowParams.current = params;
+  };
+  /** 清除路由 */
+  const handelDelHistory = (params: any) => {
+    const value = true;
+    setcanGoBack(true);
+    postMessageToWeb({...params, model: 200}, value);
   };
 
   /**
@@ -200,8 +211,10 @@ function HomeScreen({navigation, route}: any): JSX.Element {
       <Button
         title="Go to Details"
         onPress={async () => {
-          setlevl(true);
-          navigation.navigate('CheckPicture', {});
+          // setlevl(true);
+          // navigation.navigate('CheckPicture', {});
+
+          DownloadImage('http://114.132.187.155:8082/webview/android/11.jpg');
         }}
       />
 

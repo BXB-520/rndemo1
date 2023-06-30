@@ -1,4 +1,4 @@
-import {PermissionsAndroid, Platform} from 'react-native';
+import {PermissionsAndroid, Platform, ToastAndroid} from 'react-native';
 import {CameraRoll} from '@react-native-camera-roll/camera-roll';
 
 export async function hasAndroidPermission() {
@@ -48,10 +48,14 @@ export async function hasAndroidPermission() {
   return await getRequestPermissionPromise();
 }
 
-async function savePicture() {
+export async function savePicture(url: string) {
   if (Platform.OS === 'android' && !(await hasAndroidPermission())) {
+    ToastAndroid.show(
+      '没有文件权限！请前往应用信息->权限管理->读写手机存储，选择仅在使用中允许！或始终允许！',
+      ToastAndroid.LONG,
+    );
     return;
   }
 
-  CameraRoll.save(tag, {type, album});
+  CameraRoll.save(url);
 }

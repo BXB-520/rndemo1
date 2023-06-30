@@ -29,6 +29,8 @@ import Feather from 'react-native-vector-icons/Feather';
 import LinearGradient from 'react-native-linear-gradient';
 import ImageResizer from 'react-native-image-resizer';
 
+const maxNumber = 60;
+
 function CheckPicture({navigation}: any): JSX.Element {
   const [isResizer, setIsResizer] = useState<boolean>(true);
   const [allPhotos, setAllPhotos] = useState<any[]>([]);
@@ -44,10 +46,15 @@ function CheckPicture({navigation}: any): JSX.Element {
   /** 页面加载图片 */
   const handelLoad = async () => {
     if (Platform.OS === 'android' && !(await hasAndroidPermission())) {
+      ToastAndroid.show(
+        '没有文件权限！请前往应用信息->权限管理->读写手机存储，选择仅在使用中允许！或始终允许！',
+        ToastAndroid.LONG,
+      );
+      navigation.pop();
       return;
     }
     CameraRoll.getPhotos({
-      first: 60,
+      first: maxNumber,
       assetType: 'Photos',
       include: ['imageSize'],
     })
@@ -157,7 +164,7 @@ function CheckPicture({navigation}: any): JSX.Element {
           name="close"
           size={25}
         />
-        <Text style={styles.title}>全部项目</Text>
+        <Text style={styles.title}>部分项目（{maxNumber}）</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.bg}>
