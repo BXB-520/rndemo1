@@ -5,41 +5,29 @@
  * @format
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   BackHandler,
-  Button,
-  Image,
   NativeModules,
-  SafeAreaView,
-  ScrollView,
   StatusBar,
-  StyleSheet,
-  Text,
   ToastAndroid,
   View,
   useColorScheme,
 } from 'react-native';
-import { WebView, WebViewMessageEvent } from 'react-native-webview';
-import { Colors } from 'react-native/Libraries/NewAppScreen';
-import UserAgent from 'react-native-user-agent';
-import { Platform } from 'react-native';
-import { CameraRoll } from '@react-native-camera-roll/camera-roll';
-import { hasAndroidPermission, savePicture } from '../../hooks/picturePromise';
-import RNFS from 'react-native-fs';
-import CheckPicture from '../checkPicture';
-import { DownloadImage } from '../../hooks/downloadPicture';
+import {WebView, WebViewMessageEvent} from 'react-native-webview';
+import {Colors} from 'react-native/Libraries/NewAppScreen';
+import {Platform} from 'react-native';
+import {DownloadImage} from '../../hooks/downloadPicture';
 
-const { StatusBarManager } = NativeModules;
+const {StatusBarManager} = NativeModules;
 
-function HomeScreen({ navigation, route }: any): JSX.Element {
+function HomeScreen({navigation, route}: any): JSX.Element {
   const webViewRef = useRef<any>(null);
 
   const nowParams = useRef<any>(null);
 
   const [canGoBack, setcanGoBack] = useState(false);
   const [levl, setlevl] = useState(false);
-  const [visible, setvisible] = useState(false);
 
   const isDarkMode = useColorScheme() === 'dark';
 
@@ -49,19 +37,12 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
   };
 
   useEffect(() => {
-    console.log('88888888888', route.params);
-
-    if (route.params?.qrcodeBackData) {
-      console.log('route.params?.qrcodeBackData', route.params?.qrcodeBackData);
-      webViewRef.current?.postMessage(
-        JSON.stringify({ qrcodeBackData: route.params?.qrcodeBackData }),
-      );
-    }
+    console.log('getbackdata');
 
     if (route.params?.pictureList) {
       postMessageToWeb(
-        { ...nowParams.current, model: 200 },
-        { pictureList: route.params?.pictureList },
+        {...nowParams.current, model: 200},
+        {pictureList: route.params?.pictureList},
       );
     }
   }, [route.params]);
@@ -73,16 +54,11 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
       'hardwareBackPress',
       () => {
         if (backHandlerPressedCount < 1) {
+          if (levl) {
+            setlevl(false);
+            return false;
+          }
           if (canGoBack) {
-            if (levl) {
-              setlevl(false);
-              if (visible) {
-                setvisible(false);
-                return true;
-              } else {
-                return false;
-              }
-            }
             backHandlerPressedCount++;
             ToastAndroid.show('再按一次退出应用', ToastAndroid.SHORT);
             setTimeout(() => {
@@ -102,7 +78,7 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
     );
 
     return () => backHandler.remove();
-  }, [canGoBack, levl, visible]);
+  }, [canGoBack, levl]);
 
   /** 到首页执行 */
   useEffect(() => {
@@ -113,7 +89,7 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
   }, [navigation]);
 
   /** webview路由变化执行 */
-  const handleNavigationStateChange = (navState: { canGoBack: boolean }) => {
+  const handleNavigationStateChange = (navState: {canGoBack: boolean}) => {
     setcanGoBack(!navState.canGoBack);
   };
 
@@ -148,6 +124,9 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
       case 'DelHistory':
         handelDelHistory(params);
         break;
+      case 'DownloadImage':
+        handelDownloadImage(params);
+        break;
 
       default:
         break;
@@ -162,26 +141,41 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
       outUrl: params.params.url,
       outName: params.params.title,
     });
-    postMessageToWeb({ ...params, model: 200 }, value);
+    postMessageToWeb({...params, model: 200}, value);
   };
   /** 通知状态栏高度 */
   const handelStatusBarHeight = (params: any) => {
     const value = {
-      statusBarHeight: Platform.OS === 'android' ? StatusBar.currentHeight : StatusBarManager.HEIGHT,
+      statusBarHeight:
+        Platform.OS === 'android'
+          ? StatusBar.currentHeight
+          : StatusBarManager.HEIGHT - 10,
     };
-    postMessageToWeb({ ...params, model: 200 }, value);
+    postMessageToWeb({...params, model: 200}, value);
   };
   /** 打开图片并选择 */
   const handelCheckPicture = (params: any) => {
     setlevl(true);
-    navigation.navigate('CheckPicture', {});
+    navigation.navigate('CheckPicture', {
+      checkMax: params.params.checkMax,
+      showMax: params.params.showMax,
+    });
     nowParams.current = params;
   };
   /** 清除路由 */
   const handelDelHistory = (params: any) => {
     const value = true;
     setcanGoBack(true);
-    postMessageToWeb({ ...params, model: 200 }, value);
+    postMessageToWeb({...params, model: 200}, value);
+  };
+  /** 批量下载图片 */
+  const handelDownloadImage = (params: any) => {
+    const value = true;
+    params.params.ImageList.map((items: any) => {
+      const result = DownloadImage(items);
+      console.log('result', result);
+    });
+    postMessageToWeb({...params, model: 200}, value);
   };
 
   /**
@@ -207,7 +201,7 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
   return (
     <View style={backgroundStyle}>
       <StatusBar backgroundColor={'#ffffff00'} translucent={true} />
-      <View>
+      {/* <View>
         <Text>My WebView Title</Text>
       </View>
       <View>
@@ -225,7 +219,7 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
 
           DownloadImage('http://114.132.187.155:8082/webview/android/11.jpg');
         }}
-      />
+      /> */}
 
       <WebView
         ref={webViewRef}
@@ -237,8 +231,8 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
           Platform.OS === 'ios'
             ? require('../../assets/www/index.html')
             : {
-              uri: 'file:///android_asset/www/index.html',
-            }
+                uri: 'file:///android_asset/www/index.html',
+              }
         }
         useWebKit={true}
         allowFileAccessFromFileURLs={true}
@@ -247,7 +241,7 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
         applicationNameForUserAgent={'DemoApp/1.1.0'}
         onMessage={onMessage}
         // eslint-disable-next-line react-native/no-inline-styles
-        style={{ flex: 1 }}
+        style={{flex: 1}}
       />
     </View>
   );

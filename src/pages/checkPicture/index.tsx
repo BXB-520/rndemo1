@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-native/no-inline-styles */
 /**
  * Sample React Native App
@@ -6,8 +7,9 @@
  * @format
  */
 
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
+  Alert,
   Button,
   Image,
   NativeModules,
@@ -20,21 +22,23 @@ import {
   View,
   useColorScheme,
 } from 'react-native';
-import { Colors } from 'react-native/Libraries/NewAppScreen';
-import { Platform } from 'react-native';
-import { CameraRoll } from '@react-native-camera-roll/camera-roll';
-import { hasAndroidPermission } from '../../hooks/picturePromise';
+import {Colors} from 'react-native/Libraries/NewAppScreen';
+import {Platform} from 'react-native';
+import {CameraRoll} from '@react-native-camera-roll/camera-roll';
+import {hasAndroidPermission} from '../../hooks/picturePromise';
 import RNFS from 'react-native-fs';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
 import LinearGradient from 'react-native-linear-gradient';
 import ImageResizer from 'react-native-image-resizer';
 
-const { StatusBarManager } = NativeModules;
+const {StatusBarManager} = NativeModules;
 
 const maxNumber = 60;
 
-function CheckPicture({ navigation }: any): JSX.Element {
+function CheckPicture({navigation, route}: any): JSX.Element {
+  const {checkMax, showMax} = route.params;
+
   const [isResizer, setIsResizer] = useState<boolean>(true);
   const [allPhotos, setAllPhotos] = useState<any[]>([]);
   const [checkPhotos, setCheckPhotos] = useState<any[]>([]);
@@ -55,13 +59,21 @@ function CheckPicture({ navigation }: any): JSX.Element {
       );
       navigation.pop();
       return;
+    } else if (Platform.OS === 'ios' && !(await hasAndroidPermission())) {
+      Alert.alert(
+        '提示',
+        '没有文件权限！请前往应用信息->权限管理->读写手机存储，选择仅在使用中允许！或始终允许！',
+      );
+      navigation.pop();
+      return;
     }
+
     CameraRoll.getPhotos({
-      first: maxNumber,
+      first: showMax ?? maxNumber,
       assetType: 'Photos',
       include: ['imageSize'],
     })
-      .then((rusult: { edges: any }) => {
+      .then((rusult: {edges: any}) => {
         setAllPhotos(rusult.edges);
       })
       .catch(err => {
@@ -97,7 +109,7 @@ function CheckPicture({ navigation }: any): JSX.Element {
       updatedCheckPhotos.splice(findPhotoIndex, 1);
       setCheckPhotos(updatedCheckPhotos);
     } else {
-      if (checkPhotos.length < 6) {
+      if (checkPhotos.length < checkMax) {
         setCheckPhotos(prevCheckPhotos =>
           [
             ...prevCheckPhotos,
@@ -105,10 +117,10 @@ function CheckPicture({ navigation }: any): JSX.Element {
               file: image,
               id: prevCheckPhotos.length.toString(),
             },
-          ].map((item, index) => ({ ...item, id: index.toString() })),
+          ].map((item, index) => ({...item, id: index.toString()})),
         ); // 更新id的值
       } else {
-        ToastAndroid.show('最多选择6张图片！', ToastAndroid.SHORT);
+        ToastAndroid.show(`最多选择${checkMax}张图片！`, ToastAndroid.SHORT);
       }
     }
   };
@@ -135,7 +147,7 @@ function CheckPicture({ navigation }: any): JSX.Element {
 
                 navigation.navigate({
                   name: 'Home',
-                  params: { pictureList: checkedPhotos },
+                  params: {pictureList: checkedPhotos},
                   merge: true,
                 });
               }
@@ -155,23 +167,20 @@ function CheckPicture({ navigation }: any): JSX.Element {
       <StatusBar backgroundColor={'#ffffff00'} translucent={true} />
       <View style={styles.header}>
         <LinearGradient
-          colors={['#136fff', '#afecff00']}
+          colors={['#136fff', '#afecff20']}
           style={styles.containerLine}
         />
-
-        <AntDesign
+        <TouchableWithoutFeedback
           onPress={() => {
             navigation.pop();
-          }}
-          style={styles.close}
-          name="close"
-          size={25}
-        />
-        <Text style={styles.title}>部分项目（{maxNumber}）</Text>
+          }}>
+          <AntDesign style={styles.close} name="close" size={25} />
+        </TouchableWithoutFeedback>
+        <Text style={styles.title}>部分项目（{showMax ?? maxNumber}）</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.bg}>
-        {allPhotos.map((photo: { node: { image: { uri: string } } }, index) => {
+        {allPhotos.map((photo: {node: {image: {uri: string}}}, index) => {
           return (
             <TouchableWithoutFeedback
               key={index}
@@ -186,9 +195,6 @@ function CheckPicture({ navigation }: any): JSX.Element {
                         style={{
                           color: '#ffffff',
                           flex: 1,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center"
                         }}>
                         {+checkPhotos.find(
                           (items: any) =>
@@ -203,7 +209,7 @@ function CheckPicture({ navigation }: any): JSX.Element {
                 )}
                 <Image
                   style={styles.image}
-                  source={{ uri: photo.node.image.uri }}
+                  source={{uri: photo.node.image.uri}}
                 />
               </View>
             </TouchableWithoutFeedback>
@@ -220,7 +226,7 @@ function CheckPicture({ navigation }: any): JSX.Element {
               <View style={styles.bottomCheck} />
             ) : (
               <View style={styles.bottomChecked}>
-                <Feather style={{ color: '#ffffff' }} name="check" size={14} />
+                <Feather style={{color: '#ffffff'}} name="check" size={14} />
               </View>
             )}
 
@@ -231,8 +237,9 @@ function CheckPicture({ navigation }: any): JSX.Element {
         <View style={styles.bottomButton}>
           <Button
             disabled={!checkPhotos.length}
-            title={`   发送${checkPhotos.length ? '(' + checkPhotos.length + ')  ' : '   '
-              }`}
+            title={`发送${
+              checkPhotos.length ? '(' + checkPhotos.length + ')' : ''
+            }`}
             onPress={() => handelSend()}
           />
         </View>
@@ -297,7 +304,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.2,
     borderColor: 'white',
     display: 'flex',
-    alignContent: 'center',
+    alignItems: 'center',
     justifyContent: 'center',
   },
   checkedBoxText: {
@@ -305,8 +312,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   header: {
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : StatusBarManager.HEIGHT,
-    height: 80,
+    paddingTop:
+      Platform.OS === 'android'
+        ? StatusBar.currentHeight
+        : StatusBarManager.HEIGHT,
+    height: 86,
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
@@ -324,7 +334,7 @@ const styles = StyleSheet.create({
   },
   close: {
     position: 'absolute',
-    top: 45,
+    top: 48,
     right: 0,
     color: '#ffffff',
     width: 40,
@@ -340,17 +350,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     display: 'flex',
     flexDirection: 'row',
-    // justifyContent: 'center',
-    alignSelf: 'center',
+    alignSelf: 'flex-start',
+    justifyContent: 'flex-start',
   },
   bottomText: {
-    flex: 2,
+    flex: 3,
+    marginTop: 20,
     display: 'flex',
     flexDirection: 'row',
-    justifyContent: 'center',
-    alignSelf: 'center',
     fontSize: 17,
-    marginLeft: 12,
+    marginLeft: 16,
   },
   bottomCheck: {
     marginTop: 2,
@@ -372,22 +381,19 @@ const styles = StyleSheet.create({
     borderStyle: 'solid',
     borderWidth: 1.2,
     borderColor: '#2196f3',
+    color: '#ffffff',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    color: '#ffffff',
   },
   bottomCheckText: {
-    flex: 2,
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignSelf: 'center',
+    flex: 1,
     fontSize: 17,
-    marginLeft: 4,
+    marginLeft: 6,
+    color: '#00000090',
   },
   bottomCenterText: {
-    flex: 3,
+    flex: 1,
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'center',
@@ -396,11 +402,8 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   bottomButton: {
-    flex: 7,
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignSelf: 'center',
+    flex: 1,
+    marginTop: 16,
     marginRight: 12,
     fontSize: 18,
   },
