@@ -130,10 +130,10 @@ function CheckPicture({navigation, route}: any): JSX.Element {
     checkPhotos.map((items: any, index: number) => {
       ImageResizer.createResizedImage(
         items.file.uri,
-        isResizer ? items.file.width / 2 : items.file.width,
-        isResizer ? items.file.height / 2 : items.file.height,
+        1, //isResizer ? items.file.width / 2 : items.file.width,
+        1, //isResizer ? items.file.height / 2 : items.file.height,
         'PNG',
-        isResizer ? 100 : 60,
+        1, //isResizer ? 100 : 60,
       )
         .then(response => {
           readFileToBase64(response.uri)
