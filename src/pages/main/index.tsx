@@ -200,7 +200,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
 
   return (
     <View style={backgroundStyle}>
-      <StatusBar backgroundColor={'#ffffff00'} translucent={true} />
+      <StatusBar backgroundColor={'#ffffff00'} barStyle="light-content"  translucent={true} />
       {/* <View>
         <Text>My WebView Title</Text>
       </View>

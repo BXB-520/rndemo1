@@ -7,7 +7,7 @@
  * @format
  */
 
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   Button,
@@ -22,22 +22,22 @@ import {
   View,
   useColorScheme,
 } from 'react-native';
-import {Colors} from 'react-native/Libraries/NewAppScreen';
-import {Platform} from 'react-native';
-import {CameraRoll} from '@react-native-camera-roll/camera-roll';
-import {hasAndroidPermission} from '../../hooks/picturePromise';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
+import { Platform } from 'react-native';
+import { CameraRoll } from '@react-native-camera-roll/camera-roll';
+import { hasAndroidPermission } from '../../hooks/picturePromise';
 import RNFS from 'react-native-fs';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
 import LinearGradient from 'react-native-linear-gradient';
 import ImageResizer from 'react-native-image-resizer';
 
-const {StatusBarManager} = NativeModules;
+const { StatusBarManager } = NativeModules;
 
 const maxNumber = 60;
 
-function CheckPicture({navigation, route}: any): JSX.Element {
-  const {checkMax, showMax} = route.params;
+function CheckPicture({ navigation, route }: any): JSX.Element {
+  const { checkMax, showMax } = route.params;
 
   const [isResizer, setIsResizer] = useState<boolean>(true);
   const [allPhotos, setAllPhotos] = useState<any[]>([]);
@@ -46,7 +46,7 @@ function CheckPicture({navigation, route}: any): JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
 
   const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+    // backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
     flex: 1,
   };
 
@@ -59,21 +59,22 @@ function CheckPicture({navigation, route}: any): JSX.Element {
       );
       navigation.pop();
       return;
-    } else if (Platform.OS === 'ios' && !(await hasAndroidPermission())) {
-      Alert.alert(
-        '提示',
-        '没有文件权限！请前往应用信息->权限管理->读写手机存储，选择仅在使用中允许！或始终允许！',
-      );
-      navigation.pop();
-      return;
     }
+    // else if (Platform.OS === 'ios' && !(await hasAndroidPermission())) {
+    //   Alert.alert(
+    //     '提示',
+    //     '没有文件权限！请前往应用信息->权限管理->读写手机存储，选择仅在使用中允许！或始终允许！',
+    //   );
+    //   navigation.pop();
+    //   return;
+    // }
 
     CameraRoll.getPhotos({
       first: showMax ?? maxNumber,
       assetType: 'Photos',
       include: ['imageSize'],
     })
-      .then((rusult: {edges: any}) => {
+      .then((rusult: { edges: any }) => {
         setAllPhotos(rusult.edges);
       })
       .catch(err => {
@@ -117,7 +118,7 @@ function CheckPicture({navigation, route}: any): JSX.Element {
               file: image,
               id: prevCheckPhotos.length.toString(),
             },
-          ].map((item, index) => ({...item, id: index.toString()})),
+          ].map((item, index) => ({ ...item, id: index.toString() })),
         ); // 更新id的值
       } else {
         ToastAndroid.show(`最多选择${checkMax}张图片！`, ToastAndroid.SHORT);
@@ -145,7 +146,7 @@ function CheckPicture({navigation, route}: any): JSX.Element {
               if (checkedPhotos.length === checkPhotos.length) {
                 navigation.navigate({
                   name: 'Home',
-                  params: {pictureList: checkedPhotos},
+                  params: { pictureList: checkedPhotos },
                   merge: true,
                 });
               }
@@ -162,10 +163,10 @@ function CheckPicture({navigation, route}: any): JSX.Element {
 
   return (
     <View style={[backgroundStyle]}>
-      <StatusBar backgroundColor={'#ffffff00'} translucent={true} />
+      <StatusBar backgroundColor={'#ffffff00'} barStyle="light-content"  translucent={true} />
       <View style={styles.header}>
         <LinearGradient
-          colors={['#136fff', '#afecff20']}
+          colors={['#136fff', '#98c1ff']}
           style={styles.containerLine}
         />
         <TouchableWithoutFeedback
@@ -178,7 +179,7 @@ function CheckPicture({navigation, route}: any): JSX.Element {
       </View>
 
       <ScrollView contentContainerStyle={styles.bg}>
-        {allPhotos.map((photo: {node: {image: {uri: string}}}, index) => {
+        {allPhotos.map((photo: { node: { image: { uri: string } } }, index) => {
           return (
             <TouchableWithoutFeedback
               key={index}
@@ -191,8 +192,7 @@ function CheckPicture({navigation, route}: any): JSX.Element {
                     <View style={[styles.checkedBox]}>
                       <Text
                         style={{
-                          color: '#ffffff',
-                          flex: 1,
+                          color: '#ffffff'
                         }}>
                         {+checkPhotos.find(
                           (items: any) =>
@@ -207,7 +207,7 @@ function CheckPicture({navigation, route}: any): JSX.Element {
                 )}
                 <Image
                   style={styles.image}
-                  source={{uri: photo.node.image.uri}}
+                  source={{ uri: photo.node.image.uri }}
                 />
               </View>
             </TouchableWithoutFeedback>
@@ -224,7 +224,7 @@ function CheckPicture({navigation, route}: any): JSX.Element {
               <View style={styles.bottomCheck} />
             ) : (
               <View style={styles.bottomChecked}>
-                <Feather style={{color: '#ffffff'}} name="check" size={14} />
+                <Feather style={{ color: '#ffffff' }} name="check" size={14} />
               </View>
             )}
 
@@ -235,9 +235,8 @@ function CheckPicture({navigation, route}: any): JSX.Element {
         <View style={styles.bottomButton}>
           <Button
             disabled={!checkPhotos.length}
-            title={`发送${
-              checkPhotos.length ? '(' + checkPhotos.length + ')' : ''
-            }`}
+            title={`发送${checkPhotos.length ? '(' + checkPhotos.length + ')' : ''
+              }`}
             onPress={() => handelSend()}
           />
         </View>
@@ -314,17 +313,18 @@ const styles = StyleSheet.create({
       Platform.OS === 'android'
         ? StatusBar.currentHeight
         : StatusBarManager.HEIGHT,
-    height: 86,
+    height: 90,
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+    overflow: "hidden"
   },
   containerLine: {
     position: 'absolute',
     top: 0,
     width: '100%',
-    height: 110,
+    height: 100,
   },
   title: {
     color: '#ffffff',
@@ -332,7 +332,9 @@ const styles = StyleSheet.create({
   },
   close: {
     position: 'absolute',
-    top: 48,
+    top: Platform.OS === 'android'
+      ? StatusBar.currentHeight
+      : StatusBarManager.HEIGHT + 8,
     right: 0,
     color: '#ffffff',
     width: 40,
@@ -401,7 +403,7 @@ const styles = StyleSheet.create({
   },
   bottomButton: {
     flex: 1,
-    marginTop: 16,
+    marginTop: 12,
     marginRight: 12,
     fontSize: 18,
   },
