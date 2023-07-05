@@ -21,6 +21,8 @@
       name="apple-mobile-web-app-status-bar-style"
       content="black-translucent"
     />
+    <!-- 引入高德地图 -->
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 
     <link rel="apple-touch-startup-image" href="logo.png" />
     <link rel="apple-touch-startup-image" sizes="1170x2532" href="logo.png" />
@@ -31,7 +33,22 @@
 
     <script language="javascript"></script>
     <script language="JavaScript" src="./rn-bridge.js"></script>
-    <link rel="stylesheet" href="./umi.703ee1ad.css" />
+
+    <!-- 引入高德地图 -->
+    <script type="text/javascript">
+      window._AMapSecurityConfig = {
+        securityJsCode: "dee041f6833ad80b163bf7de3f9cdeec",
+      };
+    </script>
+    <!-- <script
+      type="text/javascript"
+      src="https://webapi.amap.com/maps?v=1.4.15&key=c1669b2f21fa3bd4a18f819958e41c5d&plugin=AMap.Autocomplete"
+    ></script> -->
+    <!-- <script
+      type="text/javascript"
+      src="https://webapi.amap.com/maps?v=1.4.15&key=c1669b2f21fa3bd4a18f819958e41c5d"
+    ></script> -->
+    <link rel="stylesheet" href="./umi.ccad6d18.css" />
     <script>
       window.routerBase = "/";
     </script>
@@ -43,6 +60,6 @@
   <body>
     <div id="root"></div>
 
-    <script src="./umi.a22605e0.js"></script>
+    <script src="./umi.a0808a54.js"></script>
   </body>
 </html>

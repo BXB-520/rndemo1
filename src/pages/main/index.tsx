@@ -226,19 +226,21 @@ function HomeScreen({navigation, route}: any): JSX.Element {
         originWhitelist={['*']}
         javaScriptEnabled={true}
         onNavigationStateChange={handleNavigationStateChange}
-        //source={{uri: 'http://114.132.187.155:8082/#/tabs'}}
-        source={
-          Platform.OS === 'ios'
-            ? require('../../assets/www/index.html')
-            : {
-                uri: 'file:///android_asset/www/index.html',
-              }
-        }
+        source={{uri: 'http://219.153.117.192:10001/'}}
+        // source={
+        //   Platform.OS === 'ios'
+        //     ? require('../../assets/www/index.html')
+        //     : {
+        //         uri: 'file:///android_asset/www/index.html',
+        //       }
+        // }
         useWebKit={true}
         allowFileAccessFromFileURLs={true}
         allowUniversalAccessFromFileURLs={true}
-        userAgent={'DemoApp/1.1.0'}
-        applicationNameForUserAgent={'DemoApp/1.1.0'}
+        // userAgent={
+        //   'Mozilla/5.0 (Mac OS X NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
+        // }
+        // applicationNameForUserAgent={'DemoApp/1.1.0'}
         onMessage={onMessage}
         // eslint-disable-next-line react-native/no-inline-styles
         style={{flex: 1}}

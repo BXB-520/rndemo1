@@ -127,13 +127,13 @@ function CheckPicture({navigation, route}: any): JSX.Element {
 
   const handelSend = () => {
     let checkedPhotos: string[] = [];
-    checkPhotos.map((items: any, index: number) => {
-      ImageResizer.createResizedImage(
+    checkPhotos.map(async (items: any) => {
+      await ImageResizer.createResizedImage(
         items.file.uri,
-        1, //isResizer ? items.file.width / 2 : items.file.width,
-        1, //isResizer ? items.file.height / 2 : items.file.height,
+        isResizer ? items.file.width / 2 : items.file.width,
+        isResizer ? items.file.height / 2 : items.file.height,
         'PNG',
-        1, //isResizer ? 100 : 60,
+        isResizer ? 100 : 60,
       )
         .then(response => {
           readFileToBase64(response.uri)
@@ -142,9 +142,7 @@ function CheckPicture({navigation, route}: any): JSX.Element {
                 checkedPhotos.push(`data:image/png;base64,${base64String}`);
               }
 
-              if (index === checkPhotos.length - 1) {
-                // console.log('checkedPhotos', checkedPhotos);
-
+              if (checkedPhotos.length === checkPhotos.length) {
                 navigation.navigate({
                   name: 'Home',
                   params: {pictureList: checkedPhotos},
