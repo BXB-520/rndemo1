@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-native/no-inline-styles */
 /**
  * Sample React Native App
@@ -6,7 +7,7 @@
  * @format
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   BackHandler,
   NativeModules,
@@ -20,13 +21,13 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import { WebView } from 'react-native-webview';
-import { Colors } from 'react-native/Libraries/NewAppScreen';
+import {WebView} from 'react-native-webview';
+import {Colors} from 'react-native/Libraries/NewAppScreen';
 
-const { StatusBarManager } = NativeModules;
+const {StatusBarManager} = NativeModules;
 
-function WebViews({ navigation, route }: any): JSX.Element {
-  const { outUrl, outName } = route.params;
+function WebViews({navigation, route}: any): JSX.Element {
+  const {outUrl, outName} = route.params;
 
   const webViewRef = useRef<any>(null);
 
@@ -44,7 +45,7 @@ function WebViews({ navigation, route }: any): JSX.Element {
     if (route.params?.qrcodeBackData) {
       console.log('route.params?.qrcodeBackData', route.params?.qrcodeBackData);
       webViewRef.current?.postMessage(
-        JSON.stringify({ qrcodeBackData: route.params?.qrcodeBackData }),
+        JSON.stringify({qrcodeBackData: route.params?.qrcodeBackData}),
       );
     }
   }, [route.params?.qrcodeBackData]);
@@ -72,13 +73,17 @@ function WebViews({ navigation, route }: any): JSX.Element {
 
   // 组件的其他代码
 
-  const handleNavigationStateChange = (navState: { canGoBack: boolean }) => {
+  const handleNavigationStateChange = (navState: {canGoBack: boolean}) => {
     setcanGoBack(!navState.canGoBack);
   };
 
   return (
     <View style={backgroundStyle}>
-      <StatusBar backgroundColor={'#ffffff00'} barStyle="light-content" translucent={true} />
+      <StatusBar
+        backgroundColor={'#ffffff00'}
+        barStyle="light-content"
+        translucent={true}
+      />
       <View style={styles.header}>
         <LinearGradient
           colors={['#136fff', '#98c1ff']}
@@ -108,9 +113,9 @@ function WebViews({ navigation, route }: any): JSX.Element {
       <WebView
         ref={webViewRef}
         onNavigationStateChange={handleNavigationStateChange}
-        source={{ uri: outUrl }}
+        source={{uri: outUrl}}
         allowUniversalAccessFromFileURLs={true}
-        style={{ flex: 1 }}
+        style={{flex: 1}}
       />
     </View>
   );
@@ -122,12 +127,12 @@ const styles = StyleSheet.create({
       Platform.OS === 'android'
         ? StatusBar.currentHeight
         : StatusBarManager.HEIGHT,
-    height: 90,
+    height: 80,
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
-    overflow: "hidden"
+    overflow: 'hidden',
   },
   containerLine: {
     position: 'absolute',
@@ -138,24 +143,29 @@ const styles = StyleSheet.create({
   title: {
     color: '#ffffff',
     fontSize: 18,
+    position: 'absolute',
+    top:
+      Platform.OS === 'android'
+        ? StatusBar.currentHeight! + 8
+        : StatusBarManager.HEIGHT + 8,
   },
   back: {
     position: 'absolute',
-    top: Platform.OS === 'android'
-      ? StatusBar.currentHeight
-      : StatusBarManager.HEIGHT + 8,
+    top:
+      Platform.OS === 'android'
+        ? StatusBar.currentHeight! + 8
+        : StatusBarManager.HEIGHT + 8,
     left: 12,
     color: '#ffffff',
-
   },
   close: {
     position: 'absolute',
-    top: Platform.OS === 'android'
-      ? StatusBar.currentHeight
-      : StatusBarManager.HEIGHT + 8,
+    top:
+      Platform.OS === 'android'
+        ? StatusBar.currentHeight! + 8
+        : StatusBarManager.HEIGHT + 8,
     left: 50,
     color: '#ffffff',
-
   },
 });
 

@@ -9,6 +9,8 @@
 
 import React, {useEffect, useState} from 'react';
 import {
+  Alert,
+  Button,
   Image,
   NativeModules,
   ScrollView,
@@ -18,7 +20,9 @@ import {
   ToastAndroid,
   TouchableWithoutFeedback,
   View,
+  useColorScheme,
 } from 'react-native';
+import {Colors} from 'react-native/Libraries/NewAppScreen';
 import {Platform} from 'react-native';
 import {CameraRoll} from '@react-native-camera-roll/camera-roll';
 import {hasAndroidPermission} from '../../hooks/picturePromise';
@@ -27,8 +31,6 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
 import LinearGradient from 'react-native-linear-gradient';
 import ImageResizer from 'react-native-image-resizer';
-import AsyncButton from './asyncButton';
-import {throttle} from '../../hooks/systemCapability';
 
 const {StatusBarManager} = NativeModules;
 
@@ -37,13 +39,14 @@ const maxNumber = 60;
 function CheckPicture({navigation, route}: any): JSX.Element {
   const {checkMax, showMax} = route.params;
 
-  const [isLodding, setIsLodding] = useState<boolean>(false);
   const [isResizer, setIsResizer] = useState<boolean>(true);
   const [allPhotos, setAllPhotos] = useState<any[]>([]);
   const [checkPhotos, setCheckPhotos] = useState<any[]>([]);
 
+  const isDarkMode = useColorScheme() === 'dark';
+
   const backgroundStyle = {
-    backgroundColor: '#ffffff',
+    // backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
     flex: 1,
   };
 
@@ -54,7 +57,7 @@ function CheckPicture({navigation, route}: any): JSX.Element {
         '没有文件权限！请前往应用信息->权限管理->读写手机存储，选择仅在使用中允许！或始终允许！',
         ToastAndroid.LONG,
       );
-      // navigation.pop();
+      navigation.pop();
       return;
     }
     // else if (Platform.OS === 'ios' && !(await hasAndroidPermission())) {
@@ -85,12 +88,22 @@ function CheckPicture({navigation, route}: any): JSX.Element {
     setCheckPhotos([]);
   }, []);
 
+  // 读取文件并将其转换为 base64
+  const readFileToBase64 = (filePath: string): Promise<string | null> => {
+    return new Promise((resolve, reject) => {
+      RNFS.readFile(filePath, 'base64')
+        .then(fileContent => {
+          resolve(fileContent);
+        })
+        .catch(error => {
+          console.log('读取文件错误:', error);
+          reject(null);
+        });
+    });
+  };
+
   /** 选中照片 */
   const handelAddPhoto = (image: any) => {
-    if (isLodding) {
-      return;
-    }
-
     const findPhotoIndex = checkPhotos.findIndex(
       (item: any) => item.file.uri === image.uri,
     );
@@ -120,58 +133,115 @@ function CheckPicture({navigation, route}: any): JSX.Element {
           return updatedCheckPhotos;
         });
       } else {
-        showToast();
+        ToastAndroid.show(`最多选择${checkMax}张图片！`, ToastAndroid.SHORT);
       }
     }
   };
 
-  const showToast = throttle(() => {
-    if (Platform.OS === 'android') {
-      ToastAndroid.show(`最多选择${checkMax}张图片！`, ToastAndroid.LONG);
-    } else {
-    }
-  }, 1000);
+  // const handelSend = () => {
+  //   let checkedPhotos: string[] = [];
+  //   checkPhotos.map(async (items: any) => {
+  //     if (isResizer) {
+  //       console.log(items.file.width);
 
-  const handleSend = async () => {
-    setIsLodding(true);
-    let checkedPhotos: {}[] = [];
-    await Promise.all(
-      checkPhotos.map(async items => {
-        try {
-          if (isResizer) {
-            const result = await ImageResizer.createResizedImage(
-              items.file.uri,
-              items.file.width / 3,
-              items.file.height / 3,
-              'PNG',
-              60,
-              0,
-              RNFS.DocumentDirectoryPath,
-            );
+  //       await ImageResizer.createResizedImage(
+  //         items.file.uri,
+  //         items.file.width / 2,
+  //         items.file.height / 2,
+  //         'PNG',
+  //         50,
+  //       )
+  //         .then(response => {
+  //           readFileToBase64(response.uri)
+  //             .then(base64String => {
+  //               if (base64String) {
+  //                 checkedPhotos.push(`data:image/png;base64,${base64String}`);
+  //               }
 
-            checkedPhotos.push({
-              id: items.id,
-              uri: result.uri,
-            });
-          } else {
-            checkedPhotos.push({
-              id: items.id,
-              uri: items.file.uri,
+  //               if (checkedPhotos.length === checkPhotos.length) {
+  //                 navigation.navigate({
+  //                   name: 'Home',
+  //                   params: {pictureList: checkedPhotos},
+  //                   merge: true,
+  //                 });
+  //               }
+  //             })
+  //             .catch(error => {
+  //               console.log('readFileToBase64-转换错误:', error);
+  //             });
+  //         })
+  //         .catch(err => {
+  //           console.log('ImageResizer-err:', err);
+  //         });
+  //     } else {
+  //       readFileToBase64(items.file.uri)
+  //         .then(base64String => {
+  //           if (base64String) {
+  //             checkedPhotos.push(`data:image/png;base64,${base64String}`);
+  //           }
+
+  //           if (checkedPhotos.length === checkPhotos.length) {
+  //             navigation.navigate({
+  //               name: 'Home',
+  //               params: {pictureList: checkedPhotos},
+  //               merge: true,
+  //             });
+  //           }
+  //         })
+  //         .catch(error => {
+  //           console.log('readFileToBase64-转换错误:', error);
+  //         });
+  //     }
+  //   });
+  // };
+
+  const handelSend = async () => {
+    let checkedPhotos: string[] = [];
+
+    for (const items of checkPhotos) {
+      try {
+        if (isResizer) {
+          console.log(items.file.uri);
+
+          const response = await ImageResizer.createResizedImage(
+            items.file.uri,
+            items.file.width / 2,
+            items.file.height / 2,
+            'PNG',
+            1,
+          );
+
+          const base64String = await readFileToBase64(response.uri);
+
+          if (base64String) {
+            checkedPhotos.push(`data:image/png;base64,${base64String}`);
+          }
+
+          if (checkedPhotos.length === checkPhotos.length) {
+            navigation.navigate({
+              name: 'Home',
+              params: {pictureList: checkedPhotos},
+              merge: true,
             });
           }
-        } catch (error) {
-          console.log('处理错误:', error);
-          setIsLodding(false);
-        }
-      }),
-    );
+        } else {
+          const base64String = await readFileToBase64(items.file.uri);
+          if (base64String) {
+            checkedPhotos.push(`data:image/png;base64,${base64String}`);
+          }
 
-    setIsLodding(false);
-    navigation.navigate({
-      name: 'Home',
-      params: {pictureList: checkedPhotos},
-      merge: true,
-    });
+          if (checkedPhotos.length === checkPhotos.length) {
+            navigation.navigate({
+              name: 'Home',
+              params: {pictureList: checkedPhotos},
+              merge: true,
+            });
+          }
+        }
+      } catch (error) {
+        console.log('处理错误:', error);
+      }
+    }
   };
 
   return (
@@ -181,7 +251,6 @@ function CheckPicture({navigation, route}: any): JSX.Element {
         barStyle="light-content"
         translucent={true}
       />
-
       <View style={styles.header}>
         <LinearGradient
           colors={['#136fff', '#98c1ff']}
@@ -249,14 +318,14 @@ function CheckPicture({navigation, route}: any): JSX.Element {
             <Text style={styles.bottomCheckText}>原图</Text>
           </View>
         </TouchableWithoutFeedback>
-        <View style={styles.bottomTextOther} />
+
         <View style={styles.bottomButton}>
-          <AsyncButton
+          <Button
             disabled={!checkPhotos.length}
             title={`发送${
               checkPhotos.length ? '(' + checkPhotos.length + ')' : ''
             }`}
-            onPress={() => handleSend()}
+            onPress={() => handelSend()}
           />
         </View>
       </View>
@@ -366,40 +435,24 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     width: '100%',
-    paddingTop: 12,
-    paddingLeft: 16,
-    paddingRight: 16,
-    height: 72,
+    height: 80,
     zIndex: 100,
     backgroundColor: 'white',
     display: 'flex',
     flexDirection: 'row',
     alignSelf: 'flex-start',
     justifyContent: 'flex-start',
-    borderColor: '#c4c3c3',
-    borderStyle: 'solid',
-    borderTopWidth: 0.5,
   },
   bottomText: {
-    flex: 1,
-    height: 36,
+    flex: 3,
+    marginTop: 20,
     display: 'flex',
     flexDirection: 'row',
     fontSize: 17,
-    justifyContent: 'flex-start',
-    alignContent: 'center',
-  },
-  bottomTextOther: {
-    flex: 2,
-    height: 36,
-    display: 'flex',
-    flexDirection: 'row',
-    fontSize: 17,
-    justifyContent: 'flex-start',
-    alignContent: 'center',
+    marginLeft: 16,
   },
   bottomCheck: {
-    top: 8,
+    marginTop: 2,
     width: 20,
     height: 20,
     borderRadius: 50,
@@ -409,7 +462,7 @@ const styles = StyleSheet.create({
     borderColor: '#9e9e9e',
   },
   bottomChecked: {
-    top: 8,
+    marginTop: 2,
     width: 20,
     height: 20,
     borderRadius: 50,
@@ -424,7 +477,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   bottomCheckText: {
-    top: 7,
+    flex: 1,
     fontSize: 17,
     marginLeft: 6,
     color: '#00000090',
@@ -440,6 +493,8 @@ const styles = StyleSheet.create({
   },
   bottomButton: {
     flex: 1,
+    marginTop: 12,
+    marginRight: 12,
     fontSize: 18,
   },
 });

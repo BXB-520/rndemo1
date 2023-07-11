@@ -7,6 +7,7 @@
 
 import React, {useEffect, useRef, useState} from 'react';
 import {
+  Alert,
   BackHandler,
   NativeModules,
   StatusBar,
@@ -18,6 +19,11 @@ import {WebView, WebViewMessageEvent} from 'react-native-webview';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 import {Platform} from 'react-native';
 import {DownloadImage} from '../../hooks/downloadPicture';
+
+import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
+import ImagePicker from 'react-native-image-crop-picker';
+import ImageResizer from 'react-native-image-resizer';
+import RNFS from 'react-native-fs';
 
 const {StatusBarManager} = NativeModules;
 
@@ -36,14 +42,58 @@ function HomeScreen({navigation, route}: any): JSX.Element {
     flex: 1,
   };
 
+  function openImageLibrary() {
+    launchImageLibrary(
+      {mediaType: 'photo', includeBase64: true, selectionLimit: 5},
+      e => {
+        console.log(e);
+      },
+    );
+    // ImagePicker.openPicker({
+    //   multiple: true,
+    // }).then(images => {
+    //   console.log(images);
+    // });
+    // ImagePicker.openPicker({
+    //   width: 300,
+    //   height: 400,
+    //   multiple: true,
+    // }).then(image => {
+    //   console.log(image);
+    // });
+    // You can also use as a promise without 'callback':
+    // const result = await launchImageLibrary(options?);
+  }
+
+  /** 图片并压缩转base64 */
+  const handelPostPics = async (pictureList: any[]) => {
+    let list: any = [];
+    await Promise.all(
+      pictureList.map(async (items: any) => {
+        const base64String = await RNFS.readFile(items.uri, 'base64');
+        if (base64String) {
+          list.push({
+            id: items.id,
+            base64: `data:image/png;base64,${base64String}`,
+          });
+        }
+      }),
+    );
+
+    list.sort((start: any, end: any) => start.id - end.id);
+
+    postMessageToWeb(
+      {...nowParams.current, model: 200},
+      {pictureList: list.map((items: any) => items.base64)},
+    );
+  };
+
   useEffect(() => {
-    console.log('getbackdata');
+    // openImageLibrary();
+    console.log('getbackdata', route.params?.pictureList);
 
     if (route.params?.pictureList) {
-      postMessageToWeb(
-        {...nowParams.current, model: 200},
-        {pictureList: route.params?.pictureList},
-      );
+      handelPostPics(route.params?.pictureList);
     }
   }, [route.params]);
 
@@ -193,14 +243,18 @@ function HomeScreen({navigation, route}: any): JSX.Element {
     };
     let responseStr = JSON.stringify(response);
     const jsString = `(function() {window.RN_WebViewBridge && window.RN_WebViewBridge.onMessage(${responseStr});})()`;
-    console.log(jsString);
+    // console.log(jsString);
     webViewRef.current?.injectJavaScript(jsString);
     nowParams.current = null;
   };
 
   return (
     <View style={backgroundStyle}>
-      <StatusBar backgroundColor={'#ffffff00'} barStyle="light-content"  translucent={true} />
+      <StatusBar
+        backgroundColor={'#ffffff00'}
+        barStyle="light-content"
+        translucent={true}
+      />
       {/* <View>
         <Text>My WebView Title</Text>
       </View>
@@ -226,7 +280,8 @@ function HomeScreen({navigation, route}: any): JSX.Element {
         originWhitelist={['*']}
         javaScriptEnabled={true}
         onNavigationStateChange={handleNavigationStateChange}
-        source={{uri: 'http://219.153.117.192:10001/'}}
+        //source={{uri: 'http://114.132.187.155:8082/'}}
+        source={{uri: 'http://219.153.117.192:10001'}}
         // source={
         //   Platform.OS === 'ios'
         //     ? require('../../assets/www/index.html')
