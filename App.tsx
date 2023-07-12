@@ -1,9 +1,9 @@
 // In App.js in a new project
 
 import * as React from 'react';
-import {View, Text, Button} from 'react-native';
-import {NavigationContainer} from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import { View, Text, Button } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from './src/pages/main';
 import Qrcode from './src/pages/qrcode';
 import WebViews from './src/pages/webview';
@@ -22,9 +22,9 @@ import CheckPicture from './src/pages/checkPicture';
 //   );
 // }
 
-function DetailsScreen({navigation}) {
+function DetailsScreen({ navigation }) {
   return (
-    <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
       <Text>Details Screen</Text>
       <Button
         title="back to home"
@@ -34,7 +34,7 @@ function DetailsScreen({navigation}) {
 
           navigation.navigate({
             name: 'Home',
-            params: {url: '1234'},
+            params: { url: '1234' },
             merge: true,
           });
         }}
@@ -52,7 +52,7 @@ function App() {
         <Stack.Screen
           name="Home"
           component={HomeScreen}
-          options={{headerShown: false}}
+          options={{ headerShown: false, headerTransparent: true }}
         />
         <Stack.Screen name="Details" component={DetailsScreen} />
         {/* <Stack.Screen
@@ -64,12 +64,12 @@ function App() {
         <Stack.Screen
           name="CheckPicture"
           component={CheckPicture}
-          options={{headerShown: false, headerTransparent: true}}
+          options={{ headerShown: false, headerTransparent: true }}
         />
         <Stack.Screen
           name="Webview"
           component={WebViews}
-          options={{headerShown: false, headerTransparent: true}}
+          options={{ headerShown: false, headerTransparent: true }}
         />
       </Stack.Navigator>
     </NavigationContainer>

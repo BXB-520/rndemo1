@@ -7,7 +7,7 @@
  * @format
  */
 
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   BackHandler,
   NativeModules,
@@ -15,19 +15,22 @@ import {
   StatusBar,
   StyleSheet,
   Text,
+  TouchableHighlight,
+  TouchableOpacity,
   TouchableWithoutFeedback,
   useColorScheme,
   View,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import {WebView} from 'react-native-webview';
-import {Colors} from 'react-native/Libraries/NewAppScreen';
+import { WebView } from 'react-native-webview';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
+import Feather from 'react-native-vector-icons/Feather';
 
-const {StatusBarManager} = NativeModules;
+const { StatusBarManager } = NativeModules;
 
-function WebViews({navigation, route}: any): JSX.Element {
-  const {outUrl, outName} = route.params;
+function WebViews({ navigation, route }: any): JSX.Element {
+  const { outUrl, outName } = route.params;
 
   const webViewRef = useRef<any>(null);
 
@@ -45,7 +48,7 @@ function WebViews({navigation, route}: any): JSX.Element {
     if (route.params?.qrcodeBackData) {
       console.log('route.params?.qrcodeBackData', route.params?.qrcodeBackData);
       webViewRef.current?.postMessage(
-        JSON.stringify({qrcodeBackData: route.params?.qrcodeBackData}),
+        JSON.stringify({ qrcodeBackData: route.params?.qrcodeBackData }),
       );
     }
   }, [route.params?.qrcodeBackData]);
@@ -73,16 +76,16 @@ function WebViews({navigation, route}: any): JSX.Element {
 
   // 组件的其他代码
 
-  const handleNavigationStateChange = (navState: {canGoBack: boolean}) => {
+  const handleNavigationStateChange = (navState: { canGoBack: boolean }) => {
     setcanGoBack(!navState.canGoBack);
   };
 
   return (
     <View style={backgroundStyle}>
       <StatusBar
-        backgroundColor={'#ffffff00'}
+
         barStyle="light-content"
-        translucent={true}
+        backgroundColor={"red"}
       />
       <View style={styles.header}>
         <LinearGradient
@@ -97,15 +100,19 @@ function WebViews({navigation, route}: any): JSX.Element {
               webViewRef.current.goBack();
             }
           }}>
-          <AntDesign style={styles.back} name="left" size={23} />
+          <View style={styles.back}>
+            <AntDesign name="left" color={"#ffffff"} size={24} />
+          </View>
         </TouchableWithoutFeedback>
 
-        <TouchableWithoutFeedback
-          onPress={() => {
-            navigation.pop();
-          }}>
-          <AntDesign style={styles.close} name="close" size={25} />
+        <TouchableWithoutFeedback onPress={() => {
+          navigation.pop();
+        }}>
+          <View style={styles.close}>
+            <AntDesign name="close" color={"#ffffff"} size={25} />
+          </View>
         </TouchableWithoutFeedback>
+
 
         <Text style={styles.title}>{outName}</Text>
       </View>
@@ -113,9 +120,9 @@ function WebViews({navigation, route}: any): JSX.Element {
       <WebView
         ref={webViewRef}
         onNavigationStateChange={handleNavigationStateChange}
-        source={{uri: outUrl}}
+        source={{ uri: outUrl }}
         allowUniversalAccessFromFileURLs={true}
-        style={{flex: 1}}
+        style={{ flex: 1 }}
       />
     </View>
   );
@@ -123,11 +130,9 @@ function WebViews({navigation, route}: any): JSX.Element {
 
 const styles = StyleSheet.create({
   header: {
-    paddingTop:
-      Platform.OS === 'android'
-        ? StatusBar.currentHeight
-        : StatusBarManager.HEIGHT,
-    height: 80,
+    height: Platform.OS === 'android'
+      ? StatusBar.currentHeight! + 44
+      : StatusBarManager.HEIGHT + 44,
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
@@ -147,26 +152,29 @@ const styles = StyleSheet.create({
     top:
       Platform.OS === 'android'
         ? StatusBar.currentHeight! + 8
-        : StatusBarManager.HEIGHT + 8,
+        : StatusBarManager.HEIGHT + 10,
   },
   back: {
     position: 'absolute',
     top:
       Platform.OS === 'android'
         ? StatusBar.currentHeight! + 8
-        : StatusBarManager.HEIGHT + 8,
+        : StatusBarManager.HEIGHT + 10,
     left: 12,
-    color: '#ffffff',
+    width: 25,
+    height: 25
   },
   close: {
     position: 'absolute',
     top:
       Platform.OS === 'android'
         ? StatusBar.currentHeight! + 8
-        : StatusBarManager.HEIGHT + 8,
+        : StatusBarManager.HEIGHT + 10,
     left: 50,
-    color: '#ffffff',
+    width: 25,
+    height: 25
   },
+
 });
 
 export default WebViews;

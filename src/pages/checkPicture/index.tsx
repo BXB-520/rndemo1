@@ -7,7 +7,7 @@
  * @format
  */
 
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Image,
   NativeModules,
@@ -19,23 +19,23 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import {Platform} from 'react-native';
-import {CameraRoll} from '@react-native-camera-roll/camera-roll';
-import {hasAndroidPermission} from '../../hooks/picturePromise';
+import { Platform } from 'react-native';
+import { CameraRoll } from '@react-native-camera-roll/camera-roll';
+import { hasAndroidPermission } from '../../hooks/picturePromise';
 import RNFS from 'react-native-fs';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
 import LinearGradient from 'react-native-linear-gradient';
 import ImageResizer from 'react-native-image-resizer';
 import AsyncButton from './asyncButton';
-import {throttle} from '../../hooks/systemCapability';
+import { throttle } from '../../hooks/systemCapability';
 
-const {StatusBarManager} = NativeModules;
+const { StatusBarManager } = NativeModules;
 
 const maxNumber = 60;
 
-function CheckPicture({navigation, route}: any): JSX.Element {
-  const {checkMax, showMax} = route.params;
+function CheckPicture({ navigation, route }: any): JSX.Element {
+  const { checkMax, showMax } = route.params;
 
   const [isLodding, setIsLodding] = useState<boolean>(false);
   const [isResizer, setIsResizer] = useState<boolean>(true);
@@ -71,7 +71,7 @@ function CheckPicture({navigation, route}: any): JSX.Element {
       assetType: 'Photos',
       include: ['imageSize'],
     })
-      .then((rusult: {edges: any}) => {
+      .then((rusult: { edges: any }) => {
         setAllPhotos(rusult.edges);
       })
       .catch(err => {
@@ -134,45 +134,55 @@ function CheckPicture({navigation, route}: any): JSX.Element {
 
   const handleSend = async () => {
     setIsLodding(true);
-    let checkedPhotos: {}[] = [];
-    await Promise.all(
-      checkPhotos.map(async items => {
-        try {
-          if (isResizer) {
-            const result = await ImageResizer.createResizedImage(
-              items.file.uri,
-              items.file.width / 3,
-              items.file.height / 3,
-              'PNG',
-              60,
-              0,
-              RNFS.DocumentDirectoryPath,
-            );
+    const checkedPhotos: { id: any; uri: any; }[] = [];
 
-            checkedPhotos.push({
-              id: items.id,
-              uri: result.uri,
-            });
-          } else {
-            checkedPhotos.push({
-              id: items.id,
-              uri: items.file.uri,
-            });
-          }
-        } catch (error) {
-          console.log('处理错误:', error);
-          setIsLodding(false);
+    try {
+      await Promise.all(checkPhotos.map(async (items) => {
+        let resizedUri = items.file.uri;
+
+        if (isResizer) {
+          const result = await ImageResizer.createResizedImage(
+            items.file.uri,
+            items.file.width / 3,
+            items.file.height / 3,
+            'PNG',
+            60,
+            0,
+            RNFS.DocumentDirectoryPath,
+          );
+          resizedUri = result.uri;
+        } else if (Platform.OS === 'ios') {
+          const result = await ImageResizer.createResizedImage(
+            items.file.uri,
+            items.file.width,
+            items.file.height,
+            'PNG',
+            80,
+            0,
+            RNFS.DocumentDirectoryPath,
+          );
+          resizedUri = result.uri;
         }
-      }),
-    );
+
+        checkedPhotos.push({
+          id: items.id,
+          uri: resizedUri,
+        });
+      }));
+    } catch (error) {
+      console.log('处理错误:', error);
+      setIsLodding(false);
+      return;
+    }
 
     setIsLodding(false);
     navigation.navigate({
       name: 'Home',
-      params: {pictureList: checkedPhotos},
+      params: { pictureList: checkedPhotos },
       merge: true,
     });
   };
+
 
   return (
     <View style={[backgroundStyle]}>
@@ -191,13 +201,15 @@ function CheckPicture({navigation, route}: any): JSX.Element {
           onPress={() => {
             navigation.pop();
           }}>
-          <AntDesign style={styles.close} name="close" size={25} />
+          <View style={styles.close}>
+            <AntDesign name="close" color={"#ffffff"} size={25} />
+          </View>
         </TouchableWithoutFeedback>
         <Text style={styles.title}>部分项目（{showMax ?? maxNumber}）</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.bg}>
-        {allPhotos.map((photo: {node: {image: {uri: string}}}, index) => {
+        {allPhotos.map((photo: { node: { image: { uri: string } } }, index) => {
           return (
             <TouchableWithoutFeedback
               key={index}
@@ -225,7 +237,7 @@ function CheckPicture({navigation, route}: any): JSX.Element {
                 )}
                 <Image
                   style={styles.image}
-                  source={{uri: photo.node.image.uri}}
+                  source={{ uri: photo.node.image.uri }}
                 />
               </View>
             </TouchableWithoutFeedback>
@@ -242,7 +254,7 @@ function CheckPicture({navigation, route}: any): JSX.Element {
               <View style={styles.bottomCheck} />
             ) : (
               <View style={styles.bottomChecked}>
-                <Feather style={{color: '#ffffff'}} name="check" size={14} />
+                <Feather style={{ color: '#ffffff' }} name="check" size={14} />
               </View>
             )}
 
@@ -253,9 +265,8 @@ function CheckPicture({navigation, route}: any): JSX.Element {
         <View style={styles.bottomButton}>
           <AsyncButton
             disabled={!checkPhotos.length}
-            title={`发送${
-              checkPhotos.length ? '(' + checkPhotos.length + ')' : ''
-            }`}
+            title={`发送${checkPhotos.length ? '(' + checkPhotos.length + ')' : ''
+              }`}
             onPress={() => handleSend()}
           />
         </View>
@@ -329,7 +340,9 @@ const styles = StyleSheet.create({
   },
   header: {
     top: 0,
-    height: 80,
+    height: Platform.OS === 'android'
+      ? StatusBar.currentHeight! + 44
+      : StatusBarManager.HEIGHT + 44,
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
@@ -350,26 +363,29 @@ const styles = StyleSheet.create({
     top:
       Platform.OS === 'android'
         ? StatusBar.currentHeight! + 8
-        : StatusBarManager.HEIGHT + 8,
+        : StatusBarManager.HEIGHT + 10,
   },
   close: {
     position: 'absolute',
     top:
       Platform.OS === 'android'
         ? StatusBar.currentHeight! + 8
-        : StatusBarManager.HEIGHT + 8,
-    right: 10,
-    color: '#ffffff',
+        : StatusBarManager.HEIGHT + 10,
+    right: 12,
+    width: 25,
+    height: 25,
   },
   bottom: {
     position: 'relative',
     bottom: 0,
     left: 0,
     width: '100%',
-    paddingTop: 12,
+    paddingTop: 10,
     paddingLeft: 16,
     paddingRight: 16,
-    height: 72,
+    height: Platform.OS === 'android'
+      ? StatusBar.currentHeight! + 44
+      : StatusBarManager.HEIGHT + 34,
     zIndex: 100,
     backgroundColor: 'white',
     display: 'flex',

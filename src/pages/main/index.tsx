@@ -5,29 +5,30 @@
  * @format
  */
 
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   BackHandler,
   NativeModules,
   StatusBar,
+  Text,
   ToastAndroid,
   View,
   useColorScheme,
 } from 'react-native';
-import {WebView, WebViewMessageEvent} from 'react-native-webview';
-import {Colors} from 'react-native/Libraries/NewAppScreen';
-import {Platform} from 'react-native';
-import {DownloadImage} from '../../hooks/downloadPicture';
+import { WebView, WebViewMessageEvent } from 'react-native-webview';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
+import { Platform } from 'react-native';
+import { DownloadImage } from '../../hooks/downloadPicture';
 
-import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import ImagePicker from 'react-native-image-crop-picker';
 import ImageResizer from 'react-native-image-resizer';
 import RNFS from 'react-native-fs';
 
-const {StatusBarManager} = NativeModules;
+const { StatusBarManager } = NativeModules;
 
-function HomeScreen({navigation, route}: any): JSX.Element {
+function HomeScreen({ navigation, route }: any): JSX.Element {
   const webViewRef = useRef<any>(null);
 
   const nowParams = useRef<any>(null);
@@ -44,7 +45,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
 
   function openImageLibrary() {
     launchImageLibrary(
-      {mediaType: 'photo', includeBase64: true, selectionLimit: 5},
+      { mediaType: 'photo', includeBase64: true, selectionLimit: 5 },
       e => {
         console.log(e);
       },
@@ -83,8 +84,8 @@ function HomeScreen({navigation, route}: any): JSX.Element {
     list.sort((start: any, end: any) => start.id - end.id);
 
     postMessageToWeb(
-      {...nowParams.current, model: 200},
-      {pictureList: list.map((items: any) => items.base64)},
+      { ...nowParams.current, model: 200 },
+      { pictureList: list.map((items: any) => items.base64) },
     );
   };
 
@@ -139,7 +140,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
   }, [navigation]);
 
   /** webview路由变化执行 */
-  const handleNavigationStateChange = (navState: {canGoBack: boolean}) => {
+  const handleNavigationStateChange = (navState: { canGoBack: boolean }) => {
     setcanGoBack(!navState.canGoBack);
   };
 
@@ -191,7 +192,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
       outUrl: params.params.url,
       outName: params.params.title,
     });
-    postMessageToWeb({...params, model: 200}, value);
+    postMessageToWeb({ ...params, model: 200 }, value);
   };
   /** 通知状态栏高度 */
   const handelStatusBarHeight = (params: any) => {
@@ -199,9 +200,9 @@ function HomeScreen({navigation, route}: any): JSX.Element {
       statusBarHeight:
         Platform.OS === 'android'
           ? StatusBar.currentHeight
-          : StatusBarManager.HEIGHT - 10,
+          : StatusBarManager.HEIGHT,
     };
-    postMessageToWeb({...params, model: 200}, value);
+    postMessageToWeb({ ...params, model: 200 }, value);
   };
   /** 打开图片并选择 */
   const handelCheckPicture = (params: any) => {
@@ -216,7 +217,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
   const handelDelHistory = (params: any) => {
     const value = true;
     setcanGoBack(true);
-    postMessageToWeb({...params, model: 200}, value);
+    postMessageToWeb({ ...params, model: 200 }, value);
   };
   /** 批量下载图片 */
   const handelDownloadImage = (params: any) => {
@@ -225,7 +226,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
       const result = DownloadImage(items);
       console.log('result', result);
     });
-    postMessageToWeb({...params, model: 200}, value);
+    postMessageToWeb({ ...params, model: 200 }, value);
   };
 
   /**
@@ -263,9 +264,9 @@ function HomeScreen({navigation, route}: any): JSX.Element {
       </View>
       <View>
         <Text>My WebView Title</Text>
-      </View>
+      </View> */}
 
-      <Button
+      {/* <Button
         title="Go to Details"
         onPress={async () => {
           // setlevl(true);
@@ -281,7 +282,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
         javaScriptEnabled={true}
         onNavigationStateChange={handleNavigationStateChange}
         //source={{uri: 'http://114.132.187.155:8082/'}}
-        source={{uri: 'http://219.153.117.192:10001'}}
+        source={{ uri: 'http://219.153.117.192:10001' }}
         // source={
         //   Platform.OS === 'ios'
         //     ? require('../../assets/www/index.html')
@@ -289,6 +290,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
         //         uri: 'file:///android_asset/www/index.html',
         //       }
         // }
+
         useWebKit={true}
         allowFileAccessFromFileURLs={true}
         allowUniversalAccessFromFileURLs={true}
@@ -298,7 +300,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
         // applicationNameForUserAgent={'DemoApp/1.1.0'}
         onMessage={onMessage}
         // eslint-disable-next-line react-native/no-inline-styles
-        style={{flex: 1}}
+        style={{ flex: 1 }}
       />
     </View>
   );
