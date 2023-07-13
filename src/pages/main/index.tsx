@@ -214,7 +214,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
         barStyle="light-content"
         translucent={true}
       />
-      <View>
+      {/* <View>
         <Text>My WebView Title</Text>
       </View>
       <View>
@@ -246,7 +246,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
             });
           }
         }}
-      />
+      /> */}
 
       <WebView
         ref={webViewRef}

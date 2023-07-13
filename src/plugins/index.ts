@@ -1,15 +1,15 @@
-import {SetStateAction} from 'react';
-import {NativeModules, Platform, StatusBar} from 'react-native';
-import {DownloadImage} from '../hooks/downloadPicture';
-import {hasCameraPermission} from '../promise/cameraPromise';
-import {ImagePickerResponse, launchCamera} from 'react-native-image-picker';
+import { SetStateAction } from 'react';
+import { NativeModules, Platform, StatusBar } from 'react-native';
+import { DownloadImage } from '../hooks/downloadPicture';
+import { hasCameraPermission } from '../promise/cameraPromise';
+import { ImagePickerResponse, launchCamera } from 'react-native-image-picker';
 
 /** 打开webview */
 export const handelWebview = (
-  params: {params: {url: any; title: any}},
-  setlevl: {(value: SetStateAction<boolean>): void; (arg0: boolean): void},
+  params: { params: { url: any; title: any } },
+  setlevl: { (value: SetStateAction<boolean>): void; (arg0: boolean): void },
   navigation: {
-    navigate: (arg0: string, arg1: {outUrl: any; outName: any}) => void;
+    navigate: (arg0: string, arg1: { outUrl: any; outName: any }) => void;
   },
 ) => {
   setlevl(true);
@@ -18,10 +18,10 @@ export const handelWebview = (
     outName: params.params.title,
   });
 
-  return {...params, model: 200, value: true};
+  return { ...params, model: 200, value: true };
 };
 
-const {StatusBarManager} = NativeModules;
+const { StatusBarManager } = NativeModules;
 /** 通知状态栏高度 */
 export const handelStatusBarHeight = (params: any) => {
   const value = {
@@ -30,17 +30,17 @@ export const handelStatusBarHeight = (params: any) => {
         ? StatusBar.currentHeight
         : StatusBarManager.HEIGHT,
   };
-  return {...params, model: 200, value: value};
+  return { ...params, model: 200, value: value };
 };
 
 /** 打开图片并选择 */
 export const handelCheckPicture = (
-  params: {params: {checkMax: any; showMax: any}},
-  setlevl: {(value: SetStateAction<boolean>): void; (arg0: boolean): void},
+  params: { params: { checkMax: any; showMax: any } },
+  setlevl: { (value: SetStateAction<boolean>): void; (arg0: boolean): void },
   navigation: {
-    navigate: (arg0: string, arg1: {checkMax: any; showMax: any}) => void;
+    navigate: (arg0: string, arg1: { checkMax: any; showMax: any }) => void;
   },
-  nowParams: {current: {params: {checkMax: any; showMax: any}}},
+  nowParams: { current: { params: { checkMax: any; showMax: any } } },
 ) => {
   setlevl(true);
   navigation.navigate('CheckPicture', {
@@ -56,22 +56,22 @@ export const handelDelHistory = (
   setcanGoBack: (arg0: boolean) => void,
 ) => {
   setcanGoBack(true);
-  return {...params, model: 200, value: true};
+  return { ...params, model: 200, value: true };
 };
 
 /** 批量下载图片 */
-export const handelDownloadImage = (params: {params: {ImageList: any[]}}) => {
+export const handelDownloadImage = (params: { params: { ImageList: any[] } }) => {
   params.params.ImageList.map((items: string) => {
     const result = DownloadImage(items);
     console.log('result', result);
   });
-  return {...params, model: 200, value: true};
+  return { ...params, model: 200, value: true };
 };
 
 /** 安卓返回堆栈 */
 export const HistoryStorage = (
-  params: {params: {type: string}},
-  historyStorage: {current: any[]},
+  params: { params: { type: string } },
+  historyStorage: { current: any[] },
 ) => {
   if (params.params.type === 'add') {
     historyStorage.current.push(params);
@@ -90,20 +90,21 @@ export const cameraPlugin = async (params: any) => {
         maxWidth: params.params.maxWidth,
         maxHeight: params.params.maxHeight,
         quality: params.params.quality,
+        presentationStyle: "fullScreen",
       }).then((image: ImagePickerResponse) => {
-        const {assets} = image;
+        const { assets } = image;
         if (assets) {
           resolve({
             ...params,
             model: 200,
-            value: {base64: `data:image/png;base64,${assets[0].base64}`},
+            value: { base64: `data:image/png;base64,${assets[0].base64}` },
           });
         } else {
-          resolve({...params, model: 200, value: {base64: ''}});
+          resolve({ ...params, model: 200, value: { base64: '' } });
         }
       });
     } else {
-      resolve({...params, model: 200, value: {base64: ''}});
+      resolve({ ...params, model: 200, value: { base64: '' } });
     }
   });
 };

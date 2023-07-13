@@ -1,6 +1,6 @@
-import {Platform, ToastAndroid} from 'react-native';
-import {CameraRoll} from '@react-native-camera-roll/camera-roll';
-import {PERMISSIONS, check, request} from 'react-native-permissions';
+import { Alert, Platform, ToastAndroid } from 'react-native';
+import { CameraRoll } from '@react-native-camera-roll/camera-roll';
+import { PERMISSIONS, check, request } from 'react-native-permissions';
 
 export async function hasPicturePermission() {
   const getCheckPermissionPromise = () => {
@@ -19,11 +19,13 @@ export async function hasPicturePermission() {
     }
   };
 
-  if ((await getCheckPermissionPromise()) !== 'denied') {
+  const haspermission = await getCheckPermissionPromise();
+  if (haspermission !== 'blocked' && haspermission !== 'denied') {
     return true;
   }
 
-  if ((await getRequestPermissionPromise()) !== 'denied') {
+  const requestpermission = await getRequestPermissionPromise();
+  if (requestpermission !== 'blocked' && requestpermission !== 'denied') {
     return true;
   }
   if (Platform.OS === 'android') {
@@ -32,6 +34,13 @@ export async function hasPicturePermission() {
       ToastAndroid.LONG,
     );
   } else {
+    Alert.alert(
+      '提示',
+      '没有照片权限！请前往隐私与安全性->照片，打开青春重庆的照片权限！',
+      [
+        { text: '知道了', onPress: () => { } }
+      ]
+    )
   }
 
   return false;

@@ -1,5 +1,5 @@
-import {Platform, ToastAndroid} from 'react-native';
-import {PERMISSIONS, request, check} from 'react-native-permissions';
+import { Alert, Platform, ToastAndroid } from 'react-native';
+import { PERMISSIONS, request, check } from 'react-native-permissions';
 
 export async function hasCameraPermission() {
   const getCheckPermissionPromise = () => {
@@ -18,11 +18,13 @@ export async function hasCameraPermission() {
     }
   };
 
-  if ((await getCheckPermissionPromise()) !== 'denied') {
+  const haspermission = await getCheckPermissionPromise();
+  if (haspermission !== 'blocked' && haspermission !== 'denied') {
     return true;
   }
 
-  if ((await getRequestPermissionPromise()) !== 'denied') {
+  const requestpermission = await getRequestPermissionPromise();
+  if (requestpermission !== 'blocked' && requestpermission !== 'denied') {
     return true;
   }
   if (Platform.OS === 'android') {
@@ -31,6 +33,13 @@ export async function hasCameraPermission() {
       ToastAndroid.LONG,
     );
   } else {
+    Alert.alert(
+      '提示',
+      '没有相机权限！请前往隐私与安全性->相机，打开青春重庆的相机权限！',
+      [
+        { text: '知道了', onPress: () => { } }
+      ]
+    )
   }
 
   return false;

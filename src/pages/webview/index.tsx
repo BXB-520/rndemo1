@@ -7,7 +7,7 @@
  * @format
  */
 
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   BackHandler,
   NativeModules,
@@ -23,24 +23,22 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import {WebView} from 'react-native-webview';
-import {Colors} from 'react-native/Libraries/NewAppScreen';
+import { WebView } from 'react-native-webview';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
 import Feather from 'react-native-vector-icons/Feather';
 
-const {StatusBarManager} = NativeModules;
+const { StatusBarManager } = NativeModules;
 
-function WebViews({navigation, route}: any): JSX.Element {
-  const {outUrl, outName} = route.params;
+function WebViews({ navigation, route }: any): JSX.Element {
+  const { outUrl, outName } = route.params;
 
   const webViewRef = useRef<any>(null);
 
   const [canGoBack, setcanGoBack] = useState(false);
   const [levl, setlevl] = useState(false);
 
-  const isDarkMode = useColorScheme() === 'dark';
-
   const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+    backgroundColor: '#ffffff',
     flex: 1,
   };
 
@@ -48,7 +46,7 @@ function WebViews({navigation, route}: any): JSX.Element {
     if (route.params?.qrcodeBackData) {
       console.log('route.params?.qrcodeBackData', route.params?.qrcodeBackData);
       webViewRef.current?.postMessage(
-        JSON.stringify({qrcodeBackData: route.params?.qrcodeBackData}),
+        JSON.stringify({ qrcodeBackData: route.params?.qrcodeBackData }),
       );
     }
   }, [route.params?.qrcodeBackData]);
@@ -76,7 +74,7 @@ function WebViews({navigation, route}: any): JSX.Element {
 
   // 组件的其他代码
 
-  const handleNavigationStateChange = (navState: {canGoBack: boolean}) => {
+  const handleNavigationStateChange = (navState: { canGoBack: boolean }) => {
     setcanGoBack(!navState.canGoBack);
   };
 
@@ -97,7 +95,7 @@ function WebViews({navigation, route}: any): JSX.Element {
             }
           }}>
           <View style={styles.back}>
-            <AntDesign name="left" color={'#ffffff'} size={24} />
+            <AntDesign name="left" color={'#ffffff'} size={25} />
           </View>
         </TouchableWithoutFeedback>
 
@@ -116,7 +114,7 @@ function WebViews({navigation, route}: any): JSX.Element {
       <WebView
         ref={webViewRef}
         onNavigationStateChange={handleNavigationStateChange}
-        source={{uri: outUrl}}
+        source={{ uri: outUrl }}
         allowUniversalAccessFromFileURLs={true}
         style={styles.webview}
       />
