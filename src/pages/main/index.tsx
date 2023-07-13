@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * Sample React Native App
  * https://github.com/facebook/react-native
@@ -5,33 +6,35 @@
  * @format
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
-  Alert,
   BackHandler,
-  NativeModules,
+  Button,
   StatusBar,
   Text,
   ToastAndroid,
   View,
   useColorScheme,
 } from 'react-native';
-import { WebView, WebViewMessageEvent } from 'react-native-webview';
-import { Colors } from 'react-native/Libraries/NewAppScreen';
-import { Platform } from 'react-native';
-import { DownloadImage } from '../../hooks/downloadPicture';
-
-import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
-import ImagePicker from 'react-native-image-crop-picker';
-import ImageResizer from 'react-native-image-resizer';
+import {WebView, WebViewMessageEvent} from 'react-native-webview';
+import {Colors} from 'react-native/Libraries/NewAppScreen';
+import {ImagePickerResponse, launchCamera} from 'react-native-image-picker';
 import RNFS from 'react-native-fs';
+import {hasCameraPermission} from '../../promise/cameraPromise';
+import {
+  handelWebview,
+  handelStatusBarHeight,
+  handelCheckPicture,
+  handelDelHistory,
+  handelDownloadImage,
+  HistoryStorage,
+  cameraPlugin,
+} from '../../plugins/index';
 
-const { StatusBarManager } = NativeModules;
-
-function HomeScreen({ navigation, route }: any): JSX.Element {
+function HomeScreen({navigation, route}: any): JSX.Element {
   const webViewRef = useRef<any>(null);
-
   const nowParams = useRef<any>(null);
+  const historyStorage = useRef<any>([]);
 
   const [canGoBack, setcanGoBack] = useState(false);
   const [levl, setlevl] = useState(false);
@@ -42,29 +45,6 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
     flex: 1,
   };
-
-  function openImageLibrary() {
-    launchImageLibrary(
-      { mediaType: 'photo', includeBase64: true, selectionLimit: 5 },
-      e => {
-        console.log(e);
-      },
-    );
-    // ImagePicker.openPicker({
-    //   multiple: true,
-    // }).then(images => {
-    //   console.log(images);
-    // });
-    // ImagePicker.openPicker({
-    //   width: 300,
-    //   height: 400,
-    //   multiple: true,
-    // }).then(image => {
-    //   console.log(image);
-    // });
-    // You can also use as a promise without 'callback':
-    // const result = await launchImageLibrary(options?);
-  }
 
   /** 图片并压缩转base64 */
   const handelPostPics = async (pictureList: any[]) => {
@@ -84,14 +64,13 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
     list.sort((start: any, end: any) => start.id - end.id);
 
     postMessageToWeb(
-      { ...nowParams.current, model: 200 },
-      { pictureList: list.map((items: any) => items.base64) },
+      {...nowParams.current, model: 200},
+      {pictureList: list.map((items: any) => items.base64)},
     );
   };
 
   useEffect(() => {
     // openImageLibrary();
-    console.log('getbackdata', route.params?.pictureList);
 
     if (route.params?.pictureList) {
       handelPostPics(route.params?.pictureList);
@@ -109,6 +88,7 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
             setlevl(false);
             return false;
           }
+
           if (canGoBack) {
             backHandlerPressedCount++;
             ToastAndroid.show('再按一次退出应用', ToastAndroid.SHORT);
@@ -117,6 +97,11 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
             }, 2000);
             return true;
           } else {
+            if (historyStorage.current.length) {
+              const params = historyStorage.current.pop();
+              postMessageToWeb({...params, model: 200}, true);
+              return true;
+            }
             webViewRef.current.goBack();
             return true;
           }
@@ -140,7 +125,7 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
   }, [navigation]);
 
   /** webview路由变化执行 */
-  const handleNavigationStateChange = (navState: { canGoBack: boolean }) => {
+  const handleNavigationStateChange = (navState: {canGoBack: boolean}) => {
     setcanGoBack(!navState.canGoBack);
   };
 
@@ -160,23 +145,33 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
     disposeWebMessage(params);
   };
 
-  const disposeWebMessage = (params: any) => {
-    console.log(params.modelName);
+  const disposeWebMessage = async (params: any) => {
     switch (params.modelName) {
       case 'Webview':
-        handelWebview(params);
+        const resultWebview = handelWebview(params, setlevl, navigation);
+        postMessageToWeb(resultWebview, resultWebview.value);
         break;
       case 'StatusBarHeight':
-        handelStatusBarHeight(params);
+        const resultHeight = handelStatusBarHeight(params);
+        postMessageToWeb(resultHeight, resultHeight.value);
         break;
       case 'CheckPicture':
-        handelCheckPicture(params);
+        handelCheckPicture(params, setlevl, navigation, nowParams);
         break;
       case 'DelHistory':
-        handelDelHistory(params);
+        const resultDelHistory = handelDelHistory(params, setcanGoBack);
+        postMessageToWeb(resultDelHistory, resultDelHistory.value);
         break;
       case 'DownloadImage':
-        handelDownloadImage(params);
+        const resultDownloadImage = handelDownloadImage(params);
+        postMessageToWeb(resultDownloadImage, resultDownloadImage.value);
+        break;
+      case 'HistoryStorage':
+        HistoryStorage(params, historyStorage);
+        break;
+      case 'useCamera':
+        const resultCamera: any = await cameraPlugin(params);
+        postMessageToWeb(resultCamera, resultCamera.value);
         break;
 
       default:
@@ -184,57 +179,20 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
     }
   };
 
-  /** 打开webview */
-  const handelWebview = (params: any) => {
-    const value = true;
-    setlevl(true);
-    navigation.navigate('Webview', {
-      outUrl: params.params.url,
-      outName: params.params.title,
-    });
-    postMessageToWeb({ ...params, model: 200 }, value);
-  };
-  /** 通知状态栏高度 */
-  const handelStatusBarHeight = (params: any) => {
-    const value = {
-      statusBarHeight:
-        Platform.OS === 'android'
-          ? StatusBar.currentHeight
-          : StatusBarManager.HEIGHT,
-    };
-    postMessageToWeb({ ...params, model: 200 }, value);
-  };
-  /** 打开图片并选择 */
-  const handelCheckPicture = (params: any) => {
-    setlevl(true);
-    navigation.navigate('CheckPicture', {
-      checkMax: params.params.checkMax,
-      showMax: params.params.showMax,
-    });
-    nowParams.current = params;
-  };
-  /** 清除路由 */
-  const handelDelHistory = (params: any) => {
-    const value = true;
-    setcanGoBack(true);
-    postMessageToWeb({ ...params, model: 200 }, value);
-  };
-  /** 批量下载图片 */
-  const handelDownloadImage = (params: any) => {
-    const value = true;
-    params.params.ImageList.map((items: any) => {
-      const result = DownloadImage(items);
-      console.log('result', result);
-    });
-    postMessageToWeb({ ...params, model: 200 }, value);
-  };
-
   /**
    * 封装了webview进行函数回调的方式
    * params   H5调用时候的参数，包含了functionId和modelName
    * value	需要返回的value对象
    */
-  const postMessageToWeb = (params, value) => {
+  const postMessageToWeb = (
+    params: {
+      model: any;
+      value?: boolean;
+      params?: {url: string; title: string} | {ImageList: any[]};
+      functionId?: string;
+    },
+    value: any,
+  ) => {
     let response = {
       model: params.model,
       functionId: params.functionId,
@@ -256,25 +214,39 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
         barStyle="light-content"
         translucent={true}
       />
-      {/* <View>
-        <Text>My WebView Title</Text>
-      </View>
       <View>
         <Text>My WebView Title</Text>
       </View>
       <View>
         <Text>My WebView Title</Text>
-      </View> */}
+      </View>
+      <View>
+        <Text>My WebView Title</Text>
+      </View>
 
-      {/* <Button
+      <Button
         title="Go to Details"
         onPress={async () => {
           // setlevl(true);
           // navigation.navigate('CheckPicture', {});
 
-          DownloadImage('http://114.132.187.155:8082/webview/android/11.jpg');
+          if (await hasCameraPermission()) {
+            launchCamera({
+              mediaType: 'photo',
+              includeBase64: true,
+              maxWidth: 2,
+              maxHeight: 1,
+              quality: 1,
+            }).then((image: ImagePickerResponse) => {
+              console.log(image);
+              const {assets} = image;
+              if (assets) {
+                console.log(assets[0].base64);
+              }
+            });
+          }
         }}
-      /> */}
+      />
 
       <WebView
         ref={webViewRef}
@@ -282,7 +254,7 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
         javaScriptEnabled={true}
         onNavigationStateChange={handleNavigationStateChange}
         //source={{uri: 'http://114.132.187.155:8082/'}}
-        source={{ uri: 'http://219.153.117.192:10001' }}
+        source={{uri: 'http://219.153.117.192:10001'}}
         // source={
         //   Platform.OS === 'ios'
         //     ? require('../../assets/www/index.html')
@@ -290,7 +262,6 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
         //         uri: 'file:///android_asset/www/index.html',
         //       }
         // }
-
         useWebKit={true}
         allowFileAccessFromFileURLs={true}
         allowUniversalAccessFromFileURLs={true}
@@ -300,7 +271,7 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
         // applicationNameForUserAgent={'DemoApp/1.1.0'}
         onMessage={onMessage}
         // eslint-disable-next-line react-native/no-inline-styles
-        style={{ flex: 1 }}
+        style={{flex: 1}}
       />
     </View>
   );

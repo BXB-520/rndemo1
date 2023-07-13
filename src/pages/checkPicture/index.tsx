@@ -7,7 +7,7 @@
  * @format
  */
 
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   Image,
   NativeModules,
@@ -19,23 +19,23 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import { Platform } from 'react-native';
-import { CameraRoll } from '@react-native-camera-roll/camera-roll';
-import { hasAndroidPermission } from '../../hooks/picturePromise';
+import {Platform} from 'react-native';
+import {CameraRoll} from '@react-native-camera-roll/camera-roll';
 import RNFS from 'react-native-fs';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
 import LinearGradient from 'react-native-linear-gradient';
 import ImageResizer from 'react-native-image-resizer';
 import AsyncButton from './asyncButton';
-import { throttle } from '../../hooks/systemCapability';
+import {throttle} from '../../hooks/systemCapability';
+import {hasPicturePermission} from '../../promise/picturePromise';
 
-const { StatusBarManager } = NativeModules;
+const {StatusBarManager} = NativeModules;
 
 const maxNumber = 60;
 
-function CheckPicture({ navigation, route }: any): JSX.Element {
-  const { checkMax, showMax } = route.params;
+function CheckPicture({navigation, route}: any): JSX.Element {
+  const {checkMax, showMax} = route.params;
 
   const [isLodding, setIsLodding] = useState<boolean>(false);
   const [isResizer, setIsResizer] = useState<boolean>(true);
@@ -49,34 +49,19 @@ function CheckPicture({ navigation, route }: any): JSX.Element {
 
   /** 页面加载图片 */
   const handelLoad = async () => {
-    if (Platform.OS === 'android' && !(await hasAndroidPermission())) {
-      ToastAndroid.show(
-        '没有文件权限！请前往应用信息->权限管理->读写手机存储，选择仅在使用中允许！或始终允许！',
-        ToastAndroid.LONG,
-      );
-      // navigation.pop();
-      return;
-    }
-    // else if (Platform.OS === 'ios' && !(await hasAndroidPermission())) {
-    //   Alert.alert(
-    //     '提示',
-    //     '没有文件权限！请前往应用信息->权限管理->读写手机存储，选择仅在使用中允许！或始终允许！',
-    //   );
-    //   navigation.pop();
-    //   return;
-    // }
-
-    CameraRoll.getPhotos({
-      first: showMax ?? maxNumber,
-      assetType: 'Photos',
-      include: ['imageSize'],
-    })
-      .then((rusult: { edges: any }) => {
-        setAllPhotos(rusult.edges);
+    if (await hasPicturePermission()) {
+      CameraRoll.getPhotos({
+        first: showMax ?? maxNumber,
+        assetType: 'Photos',
+        include: ['imageSize'],
       })
-      .catch(err => {
-        console.log(err);
-      });
+        .then((rusult: {edges: any}) => {
+          setAllPhotos(rusult.edges);
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    }
   };
 
   useEffect(() => {
@@ -130,45 +115,47 @@ function CheckPicture({ navigation, route }: any): JSX.Element {
       ToastAndroid.show(`最多选择${checkMax}张图片！`, ToastAndroid.LONG);
     } else {
     }
-  }, 1000);
+  }, 3000);
 
   const handleSend = async () => {
     setIsLodding(true);
-    const checkedPhotos: { id: any; uri: any; }[] = [];
+    const checkedPhotos: {id: any; uri: any}[] = [];
 
     try {
-      await Promise.all(checkPhotos.map(async (items) => {
-        let resizedUri = items.file.uri;
+      await Promise.all(
+        checkPhotos.map(async items => {
+          let resizedUri = items.file.uri;
 
-        if (isResizer) {
-          const result = await ImageResizer.createResizedImage(
-            items.file.uri,
-            items.file.width / 3,
-            items.file.height / 3,
-            'PNG',
-            60,
-            0,
-            RNFS.DocumentDirectoryPath,
-          );
-          resizedUri = result.uri;
-        } else if (Platform.OS === 'ios') {
-          const result = await ImageResizer.createResizedImage(
-            items.file.uri,
-            items.file.width,
-            items.file.height,
-            'PNG',
-            80,
-            0,
-            RNFS.DocumentDirectoryPath,
-          );
-          resizedUri = result.uri;
-        }
+          if (isResizer) {
+            const result = await ImageResizer.createResizedImage(
+              items.file.uri,
+              items.file.width / 3,
+              items.file.height / 3,
+              'PNG',
+              60,
+              0,
+              RNFS.DocumentDirectoryPath,
+            );
+            resizedUri = result.uri;
+          } else if (Platform.OS === 'ios') {
+            const result = await ImageResizer.createResizedImage(
+              items.file.uri,
+              items.file.width,
+              items.file.height,
+              'PNG',
+              80,
+              0,
+              RNFS.DocumentDirectoryPath,
+            );
+            resizedUri = result.uri;
+          }
 
-        checkedPhotos.push({
-          id: items.id,
-          uri: resizedUri,
-        });
-      }));
+          checkedPhotos.push({
+            id: items.id,
+            uri: resizedUri,
+          });
+        }),
+      );
     } catch (error) {
       console.log('处理错误:', error);
       setIsLodding(false);
@@ -178,11 +165,10 @@ function CheckPicture({ navigation, route }: any): JSX.Element {
     setIsLodding(false);
     navigation.navigate({
       name: 'Home',
-      params: { pictureList: checkedPhotos },
+      params: {pictureList: checkedPhotos},
       merge: true,
     });
   };
-
 
   return (
     <View style={[backgroundStyle]}>
@@ -202,14 +188,14 @@ function CheckPicture({ navigation, route }: any): JSX.Element {
             navigation.pop();
           }}>
           <View style={styles.close}>
-            <AntDesign name="close" color={"#ffffff"} size={25} />
+            <AntDesign name="close" color={'#ffffff'} size={25} />
           </View>
         </TouchableWithoutFeedback>
         <Text style={styles.title}>部分项目（{showMax ?? maxNumber}）</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.bg}>
-        {allPhotos.map((photo: { node: { image: { uri: string } } }, index) => {
+        {allPhotos.map((photo: {node: {image: {uri: string}}}, index) => {
           return (
             <TouchableWithoutFeedback
               key={index}
@@ -237,7 +223,7 @@ function CheckPicture({ navigation, route }: any): JSX.Element {
                 )}
                 <Image
                   style={styles.image}
-                  source={{ uri: photo.node.image.uri }}
+                  source={{uri: photo.node.image.uri}}
                 />
               </View>
             </TouchableWithoutFeedback>
@@ -254,7 +240,7 @@ function CheckPicture({ navigation, route }: any): JSX.Element {
               <View style={styles.bottomCheck} />
             ) : (
               <View style={styles.bottomChecked}>
-                <Feather style={{ color: '#ffffff' }} name="check" size={14} />
+                <Feather style={{color: '#ffffff'}} name="check" size={14} />
               </View>
             )}
 
@@ -265,12 +251,23 @@ function CheckPicture({ navigation, route }: any): JSX.Element {
         <View style={styles.bottomButton}>
           <AsyncButton
             disabled={!checkPhotos.length}
-            title={`发送${checkPhotos.length ? '(' + checkPhotos.length + ')' : ''
-              }`}
+            title={`发送${
+              checkPhotos.length ? '(' + checkPhotos.length + ')' : ''
+            }`}
             onPress={() => handleSend()}
           />
         </View>
       </View>
+
+      {/* <View style={styles.fullScreen}>
+        <Image
+          resizeMode="contain"
+          style={styles.fullScreen.image}
+          source={{
+            uri: 'file:///data/user/0/com.reactnative.qccq/files/4d77cdaf-1871-4b1e-8fc5-57dd3cb951e6.PNG',
+          }}
+        />
+      </View> */}
     </View>
   );
 }
@@ -340,9 +337,10 @@ const styles = StyleSheet.create({
   },
   header: {
     top: 0,
-    height: Platform.OS === 'android'
-      ? StatusBar.currentHeight! + 44
-      : StatusBarManager.HEIGHT + 44,
+    height:
+      Platform.OS === 'android'
+        ? StatusBar.currentHeight! + 44
+        : StatusBarManager.HEIGHT + 44,
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
@@ -383,9 +381,10 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingLeft: 16,
     paddingRight: 16,
-    height: Platform.OS === 'android'
-      ? StatusBar.currentHeight! + 44
-      : StatusBarManager.HEIGHT + 34,
+    height:
+      Platform.OS === 'android'
+        ? StatusBar.currentHeight! + 44
+        : StatusBarManager.HEIGHT + 34,
     zIndex: 100,
     backgroundColor: 'white',
     display: 'flex',
@@ -457,6 +456,17 @@ const styles = StyleSheet.create({
   bottomButton: {
     flex: 1,
     fontSize: 18,
+  },
+  fullScreen: {
+    position: 'absolute',
+    zIndex: 999,
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#0000008f',
+    image: {
+      width: '100%',
+      height: '100%',
+    },
   },
 });
 

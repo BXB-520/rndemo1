@@ -7,7 +7,7 @@
  * @format
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   BackHandler,
   NativeModules,
@@ -23,14 +23,14 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import { WebView } from 'react-native-webview';
-import { Colors } from 'react-native/Libraries/NewAppScreen';
+import {WebView} from 'react-native-webview';
+import {Colors} from 'react-native/Libraries/NewAppScreen';
 import Feather from 'react-native-vector-icons/Feather';
 
-const { StatusBarManager } = NativeModules;
+const {StatusBarManager} = NativeModules;
 
-function WebViews({ navigation, route }: any): JSX.Element {
-  const { outUrl, outName } = route.params;
+function WebViews({navigation, route}: any): JSX.Element {
+  const {outUrl, outName} = route.params;
 
   const webViewRef = useRef<any>(null);
 
@@ -48,7 +48,7 @@ function WebViews({ navigation, route }: any): JSX.Element {
     if (route.params?.qrcodeBackData) {
       console.log('route.params?.qrcodeBackData', route.params?.qrcodeBackData);
       webViewRef.current?.postMessage(
-        JSON.stringify({ qrcodeBackData: route.params?.qrcodeBackData }),
+        JSON.stringify({qrcodeBackData: route.params?.qrcodeBackData}),
       );
     }
   }, [route.params?.qrcodeBackData]);
@@ -76,17 +76,13 @@ function WebViews({ navigation, route }: any): JSX.Element {
 
   // 组件的其他代码
 
-  const handleNavigationStateChange = (navState: { canGoBack: boolean }) => {
+  const handleNavigationStateChange = (navState: {canGoBack: boolean}) => {
     setcanGoBack(!navState.canGoBack);
   };
 
   return (
     <View style={backgroundStyle}>
-      <StatusBar
-
-        barStyle="light-content"
-        backgroundColor={"red"}
-      />
+      <StatusBar barStyle="light-content" />
       <View style={styles.header}>
         <LinearGradient
           colors={['#136fff', '#98c1ff']}
@@ -101,18 +97,18 @@ function WebViews({ navigation, route }: any): JSX.Element {
             }
           }}>
           <View style={styles.back}>
-            <AntDesign name="left" color={"#ffffff"} size={24} />
+            <AntDesign name="left" color={'#ffffff'} size={24} />
           </View>
         </TouchableWithoutFeedback>
 
-        <TouchableWithoutFeedback onPress={() => {
-          navigation.pop();
-        }}>
+        <TouchableWithoutFeedback
+          onPress={() => {
+            navigation.pop();
+          }}>
           <View style={styles.close}>
-            <AntDesign name="close" color={"#ffffff"} size={25} />
+            <AntDesign name="close" color={'#ffffff'} size={25} />
           </View>
         </TouchableWithoutFeedback>
-
 
         <Text style={styles.title}>{outName}</Text>
       </View>
@@ -120,9 +116,9 @@ function WebViews({ navigation, route }: any): JSX.Element {
       <WebView
         ref={webViewRef}
         onNavigationStateChange={handleNavigationStateChange}
-        source={{ uri: outUrl }}
+        source={{uri: outUrl}}
         allowUniversalAccessFromFileURLs={true}
-        style={{ flex: 1 }}
+        style={styles.webview}
       />
     </View>
   );
@@ -130,9 +126,10 @@ function WebViews({ navigation, route }: any): JSX.Element {
 
 const styles = StyleSheet.create({
   header: {
-    height: Platform.OS === 'android'
-      ? StatusBar.currentHeight! + 44
-      : StatusBarManager.HEIGHT + 44,
+    height:
+      Platform.OS === 'android'
+        ? StatusBar.currentHeight! + 44
+        : StatusBarManager.HEIGHT + 44,
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
@@ -162,7 +159,7 @@ const styles = StyleSheet.create({
         : StatusBarManager.HEIGHT + 10,
     left: 12,
     width: 25,
-    height: 25
+    height: 25,
   },
   close: {
     position: 'absolute',
@@ -172,9 +169,12 @@ const styles = StyleSheet.create({
         : StatusBarManager.HEIGHT + 10,
     left: 50,
     width: 25,
-    height: 25
+    height: 25,
   },
-
+  webview: {
+    flex: 1,
+    marginBottom: Platform.OS === 'ios' ? 20 : 0,
+  },
 });
 
 export default WebViews;
