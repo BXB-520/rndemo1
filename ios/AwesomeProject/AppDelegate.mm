@@ -10,6 +10,10 @@
   // You can add your custom initial props in the dictionary below.
   // They will be passed down to the ViewController used by React Native.
   self.initialProps = @{};
+  
+  // 启动图片延时: 1秒
+
+  [NSThread sleepForTimeInterval:0.8];
 
   return [super application:application didFinishLaunchingWithOptions:launchOptions];
 }

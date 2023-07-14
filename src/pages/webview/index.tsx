@@ -113,9 +113,16 @@ function WebViews({ navigation, route }: any): JSX.Element {
 
       <WebView
         ref={webViewRef}
+        originWhitelist={['*']}
+        javaScriptEnabled={true}
         onNavigationStateChange={handleNavigationStateChange}
         source={{ uri: outUrl }}
+        useWebKit={true}
+        allowFileAccessFromFileURLs={true}
         allowUniversalAccessFromFileURLs={true}
+        onContentProcessDidTerminate={() => {
+          webViewRef.current.reload();
+        }}
         style={styles.webview}
       />
     </View>
