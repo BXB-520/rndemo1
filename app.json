@@ -1,7 +1,7 @@
 {
   "name": "AwesomeProject",
-  "displayName": "AwesomeProject",
-  "packagerOpts": {
-    "config": "metro.config.js"
-  }
+  "displayName": "AwesomeProject"
+  // "packagerOpts": {
+  //   "config": "babel.config.js"
+  // }
 }

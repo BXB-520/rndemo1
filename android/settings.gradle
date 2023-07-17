@@ -11,3 +11,6 @@ project(':react-native-fs').projectDir = new File(settingsDir, '../node_modules/
 //图片压缩
 include ':react-native-image-resizer'
 project(':react-native-image-resizer').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-image-resizer/android')
+//旧版相机
+include ':react-native-camera'
+project(':react-native-camera').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-camera/android')

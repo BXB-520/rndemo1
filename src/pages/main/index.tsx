@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 /* eslint-disable react-hooks/exhaustive-deps */
 /**
  * Sample React Native App
@@ -6,7 +7,7 @@
  * @format
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   BackHandler,
   Button,
@@ -16,11 +17,11 @@ import {
   View,
   useColorScheme,
 } from 'react-native';
-import { WebView, WebViewMessageEvent } from 'react-native-webview';
-import { Colors } from 'react-native/Libraries/NewAppScreen';
-import { ImagePickerResponse, launchCamera } from 'react-native-image-picker';
+import {WebView, WebViewMessageEvent} from 'react-native-webview';
+import {Colors} from 'react-native/Libraries/NewAppScreen';
+import {ImagePickerResponse, launchCamera} from 'react-native-image-picker';
 import RNFS from 'react-native-fs';
-import { hasCameraPermission } from '../../promise/cameraPromise';
+import {hasCameraPermission} from '../../promise/cameraPromise';
 import {
   handelWebview,
   handelStatusBarHeight,
@@ -31,8 +32,7 @@ import {
   cameraPlugin,
 } from '../../plugins/index';
 
-
-function HomeScreen({ navigation, route }: any): JSX.Element {
+function HomeScreen({navigation, route}: any): JSX.Element {
   const webViewRef = useRef<any>(null);
   const nowParams = useRef<any>(null);
   const historyStorage = useRef<any>([]);
@@ -65,14 +65,12 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
     list.sort((start: any, end: any) => start.id - end.id);
 
     postMessageToWeb(
-      { ...nowParams.current, model: 200 },
-      { pictureList: list.map((items: any) => items.base64) },
+      {...nowParams.current, model: 200},
+      {pictureList: list.map((items: any) => items.base64)},
     );
   };
 
   useEffect(() => {
-    // openImageLibrary();
-
     if (route.params?.pictureList) {
       handelPostPics(route.params?.pictureList);
     }
@@ -100,7 +98,7 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
           } else {
             if (historyStorage.current.length) {
               const params = historyStorage.current.pop();
-              postMessageToWeb({ ...params, model: 200 }, true);
+              postMessageToWeb({...params, model: 200}, true);
               return true;
             }
             webViewRef.current.goBack();
@@ -126,7 +124,7 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
   }, [navigation]);
 
   /** webview路由变化执行 */
-  const handleNavigationStateChange = (navState: { canGoBack: boolean }) => {
+  const handleNavigationStateChange = (navState: {canGoBack: boolean}) => {
     setcanGoBack(!navState.canGoBack);
   };
 
@@ -189,7 +187,7 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
     params: {
       model: any;
       value?: boolean;
-      params?: { url: string; title: string } | { ImageList: any[] };
+      params?: {url: string; title: string} | {ImageList: any[]};
       functionId?: string;
     },
     value: any,
@@ -215,7 +213,7 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
         barStyle="light-content"
         translucent={true}
       />
-      {/* <View>
+      <View>
         <Text>My WebView Title</Text>
       </View>
       <View>
@@ -228,9 +226,9 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
       <Button
         title="Go to Details"
         onPress={async () => {
-          // setlevl(true);
-          // navigation.navigate('CheckPicture', {});
-          webViewRef.current.reload();
+          setlevl(true);
+          navigation.navigate('Qrcode', {});
+          //webViewRef.current.reload();
           // if (await hasCameraPermission()) {
           //   launchCamera({
           //     mediaType: 'photo',
@@ -247,17 +245,17 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
           //   });
           // }
         }}
-      /> */}
+      />
 
       <WebView
         ref={webViewRef}
         cacheEnabled={false}
-        cacheMode='LOAD_NO_CACHE'
+        cacheMode="LOAD_NO_CACHE"
         originWhitelist={['*']}
         javaScriptEnabled={true}
         onNavigationStateChange={handleNavigationStateChange}
         //source={{uri: 'http://114.132.187.155:8082/'}}
-        source={{ uri: 'http://219.153.117.192:10001/tabs' }}
+        source={{uri: 'http://219.153.117.192:10001/tabs'}}
         // source={
         //   Platform.OS === 'ios'
         //     ? require('../../assets/www/index.html')
@@ -276,7 +274,7 @@ function HomeScreen({ navigation, route }: any): JSX.Element {
         // }
         // applicationNameForUserAgent={'DemoApp/1.1.0'}
         onMessage={onMessage}
-        style={{ flex: 1 }}
+        style={{flex: 1}}
       />
     </View>
   );

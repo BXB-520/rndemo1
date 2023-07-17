@@ -169,6 +169,8 @@ dependencies {
     implementation project(':react-native-fs')
     //图片压缩
     implementation project(':react-native-image-resizer')
+    //旧版相机
+    implementation project(path: ':react-native-camera')
 
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}")
     debugImplementation("com.facebook.flipper:flipper-network-plugin:${FLIPPER_VERSION}") {

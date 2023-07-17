@@ -6,7 +6,7 @@
  * @format
  */
 
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   Animated,
   SafeAreaView,
@@ -17,16 +17,22 @@ import {
   View,
 } from 'react-native';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
-import QRCodeScanner from 'react-native-qrcode-scanner';
 import LinearGradient from 'react-native-linear-gradient';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 
+import {hasCameraPermission} from '../../promise/cameraPromise';
+
+import {RNCamera} from 'react-native-camera';
+import QRCodeScanner from 'react-native-qrcode-scanner';
+
 function Qrcode({navigation}: any): JSX.Element {
+  const cameraRef = useRef(null);
   const isDarkMode = useColorScheme() === 'dark';
 
   const [animation] = useState(new Animated.Value(0));
 
   useEffect(() => {
+    hasCameraPermission();
     Animated.loop(
       Animated.timing(animation, {
         toValue: 1,
@@ -54,6 +60,9 @@ function Qrcode({navigation}: any): JSX.Element {
     });
   };
 
+  const onSuccess = e => {
+    console.log(e.data);
+  };
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar backgroundColor={'#ffffff00'} translucent={true} />
@@ -74,14 +83,15 @@ function Qrcode({navigation}: any): JSX.Element {
         </View>
         <Animated.View style={[styles.bottomGradient, {top}]}>
           <LinearGradient
-            colors={['#00000000', '#03a9f4ab']}
+            colors={['#00000000', '#5698ff']}
             style={styles.containerLine}
           />
         </Animated.View>
         <QRCodeScanner
-          onRead={handleQRCodeScanned}
-          containerStyle={styles.containerStyle}
-          cameraStyle={styles.cameraStyle}
+          onRead={onSuccess}
+          flashMode={RNCamera.Constants.FlashMode.off}
+          cameraStyle={styles.cameraContainer}
+          containerStyle={styles.cameraContainer}
         />
       </View>
     </SafeAreaView>
@@ -89,6 +99,15 @@ function Qrcode({navigation}: any): JSX.Element {
 }
 
 const styles = StyleSheet.create({
+  cameraContainer: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
   containerStyle: {
     width: 200,
   },
