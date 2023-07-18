@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="21701" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
-    <device id="retina5_9" orientation="portrait" appearance="light"/>
+    <device id="retina5_5" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="21679"/>
@@ -14,7 +14,7 @@
             <objects>
                 <viewController id="01J-lp-oVM" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="Ze5-6b-2t3">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="812"/>
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="" textAlignment="center" lineBreakMode="middleTruncation" baselineAdjustment="alignBaselines" minimumFontSize="18" translatesAutoresizingMaskIntoConstraints="NO" id="GJd-Yh-RWb">
@@ -24,33 +24,30 @@
                                 <color key="textColor" systemColor="linkColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Image" translatesAutoresizingMaskIntoConstraints="NO" id="GRI-qo-uCA">
-                                <rect key="frame" x="0.0" y="50" width="375" height="728"/>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Image" translatesAutoresizingMaskIntoConstraints="NO" id="GRI-qo-uCA">
+                                <rect key="frame" x="0.0" y="20" width="414" height="716"/>
                             </imageView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="Bcu-3y-fUS"/>
-                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <color key="tintColor" systemColor="systemBlueColor"/>
                         <constraints>
-                            <constraint firstItem="GRI-qo-uCA" firstAttribute="leading" secondItem="Bcu-3y-fUS" secondAttribute="leading" id="7Ce-mu-40y"/>
-                            <constraint firstItem="Bcu-3y-fUS" firstAttribute="bottom" secondItem="GRI-qo-uCA" secondAttribute="bottom" id="GM0-go-BNh"/>
-                            <constraint firstItem="GRI-qo-uCA" firstAttribute="top" secondItem="Bcu-3y-fUS" secondAttribute="top" id="YC6-ts-k31"/>
-                            <constraint firstItem="Bcu-3y-fUS" firstAttribute="trailing" secondItem="GRI-qo-uCA" secondAttribute="trailing" id="qco-JS-ttx"/>
+                            <constraint firstItem="GRI-qo-uCA" firstAttribute="top" secondItem="Bcu-3y-fUS" secondAttribute="top" id="5ln-Jr-DPB"/>
+                            <constraint firstItem="Bcu-3y-fUS" firstAttribute="trailing" secondItem="GRI-qo-uCA" secondAttribute="trailing" id="W3B-VK-I94"/>
+                            <constraint firstItem="GRI-qo-uCA" firstAttribute="leading" secondItem="Bcu-3y-fUS" secondAttribute="leading" id="clj-XK-FWy"/>
+                            <constraint firstItem="Bcu-3y-fUS" firstAttribute="bottom" secondItem="GRI-qo-uCA" secondAttribute="bottom" id="z32-UO-6oq"/>
                         </constraints>
                     </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="44" y="370.19704433497537"/>
+            <point key="canvasLocation" x="41.25" y="368.66197183098592"/>
         </scene>
     </scenes>
     <resources>
         <image name="Image" width="103.66666412353516" height="179"/>
         <systemColor name="linkColor">
             <color red="0.0" green="0.47843137254901963" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-        </systemColor>
-        <systemColor name="systemBackgroundColor">
-            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
         <systemColor name="systemBlueColor">
             <color red="0.0" green="0.47843137254901963" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
