@@ -36,7 +36,7 @@ export async function hasPicturePermission() {
   } else {
     Alert.alert(
       '提示',
-      '没有照片权限！请前往隐私与安全性->照片，打开青春重庆的照片权限！',
+      '没有照片权限！请前往隐私与安全性->照片，打开照片权限！',
       [
         { text: '知道了', onPress: () => { } }
       ]

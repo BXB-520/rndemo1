@@ -13,7 +13,7 @@
   
   // 启动图片延时: 1秒
 
-  [NSThread sleepForTimeInterval:0.8];
+  [NSThread sleepForTimeInterval:0.35];
 
   return [super application:application didFinishLaunchingWithOptions:launchOptions];
 }

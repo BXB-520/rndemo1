@@ -6,9 +6,11 @@
  * @format
  */
 
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
+  NativeModules,
+  Platform,
   SafeAreaView,
   StatusBar,
   StyleSheet,
@@ -16,16 +18,18 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import {Colors} from 'react-native/Libraries/NewAppScreen';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
 import LinearGradient from 'react-native-linear-gradient';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 
-import {hasCameraPermission} from '../../promise/cameraPromise';
+import { hasCameraPermission } from '../../promise/cameraPromise';
 
-import {RNCamera} from 'react-native-camera';
+import { RNCamera } from 'react-native-camera';
 import QRCodeScanner from 'react-native-qrcode-scanner';
 
-function Qrcode({navigation}: any): JSX.Element {
+const { StatusBarManager } = NativeModules;
+
+function Qrcode({ navigation }: any): JSX.Element {
   const cameraRef = useRef(null);
   const isDarkMode = useColorScheme() === 'dark';
 
@@ -36,7 +40,7 @@ function Qrcode({navigation}: any): JSX.Element {
     Animated.loop(
       Animated.timing(animation, {
         toValue: 1,
-        duration: 2500,
+        duration: 3500,
         useNativeDriver: false,
       }),
     ).start();
@@ -52,10 +56,10 @@ function Qrcode({navigation}: any): JSX.Element {
     flex: 1,
   };
 
-  const handleQRCodeScanned = ({data}: any) => {
+  const handleQRCodeScanned = ({ data }: any) => {
     navigation.navigate({
       name: 'Home',
-      params: {qrcodeBackData: data},
+      params: { qrcodeBackData: data },
       merge: true,
     });
   };
@@ -64,7 +68,7 @@ function Qrcode({navigation}: any): JSX.Element {
     console.log(e.data);
   };
   return (
-    <SafeAreaView style={backgroundStyle}>
+    <View style={backgroundStyle}>
       <StatusBar backgroundColor={'#ffffff00'} translucent={true} />
       <View style={styles.container}>
         <View style={styles.backContent}>
@@ -81,9 +85,15 @@ function Qrcode({navigation}: any): JSX.Element {
         <View style={styles.containerBottom}>
           <Text style={styles.titleBottom}>扫一扫</Text>
         </View>
-        <Animated.View style={[styles.bottomGradient, {top}]}>
+        <Animated.View style={[styles.bottomGradient, { top }]}>
+          {/* <LinearGradient
+            colors={['#3678ff00', '#3678ffcc']}
+            style={styles.containerLine}
+          /> */}
           <LinearGradient
-            colors={['#00000000', '#5698ff']}
+            colors={['#3678ff00', '#3678ffe6', '#3678ff00']}
+            start={{ x: 0, y: 1 }}
+            end={{ x: 1, y: 0 }}
             style={styles.containerLine}
           />
         </Animated.View>
@@ -94,7 +104,7 @@ function Qrcode({navigation}: any): JSX.Element {
           containerStyle={styles.cameraContainer}
         />
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -118,7 +128,9 @@ const styles = StyleSheet.create({
   backContent: {
     position: 'absolute',
     zIndex: 100,
-    top: 50,
+    top: Platform.OS === 'android'
+      ? StatusBar.currentHeight! + 8
+      : StatusBarManager.HEIGHT + 10,
     left: 20,
     width: 50,
     right: 50,
@@ -149,7 +161,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: '100%',
     textAlign: 'center',
-    top: 50,
+    top: Platform.OS === 'android'
+      ? StatusBar.currentHeight! + 8
+      : StatusBarManager.HEIGHT + 10,
     fontSize: 20,
     color: '#ffffff',
     zIndex: 99,
@@ -158,7 +172,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: '100%',
     textAlign: 'center',
-    top: 550,
+    top: 520,
     fontSize: 17,
     color: '#ffffff',
     zIndex: 99,
@@ -166,23 +180,27 @@ const styles = StyleSheet.create({
   containerBottom: {
     position: 'absolute',
     width: '100%',
-    height: 70,
+    height: Platform.OS === 'android'
+      ? StatusBar.currentHeight! + 20
+      : StatusBarManager.HEIGHT + 30,
     textAlign: 'center',
     bottom: 0,
     backgroundColor: '#000000',
     zIndex: 100,
     display: 'flex',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
   },
   containerLine: {
     width: '100%',
-    height: 30,
+    height: 6,
+    borderRadius: 0
   },
   titleBottom: {
-    fontSize: 17,
+    fontSize: 18,
     color: '#ffffff',
     zIndex: 100,
+    top: 15,
   },
 });
 
