@@ -117,6 +117,14 @@ function CheckPicture({navigation, route}: any): JSX.Element {
     }
   }, 3000);
 
+  const showAm = () => {
+    return new Promise<void>(fn => {
+      setTimeout(() => {
+        fn();
+      }, 100);
+    });
+  };
+
   const handleSend = async () => {
     setIsLodding(true);
     const checkedPhotos: {id: any; uri: any}[] = [];
@@ -148,6 +156,9 @@ function CheckPicture({navigation, route}: any): JSX.Element {
               RNFS.DocumentDirectoryPath,
             );
             resizedUri = result.uri;
+          } else {
+            //利用一个同步展示出安卓的加载动画
+            await showAm();
           }
 
           checkedPhotos.push({
@@ -191,7 +202,7 @@ function CheckPicture({navigation, route}: any): JSX.Element {
             <AntDesign name="close" color={'#ffffff'} size={25} />
           </View>
         </TouchableWithoutFeedback>
-        <Text style={styles.title}>部分项目（{showMax ?? maxNumber}）</Text>
+        <Text style={styles.title}>部分项目（{allPhotos.length}）</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.bg}>
@@ -383,7 +394,7 @@ const styles = StyleSheet.create({
     paddingRight: 16,
     height:
       Platform.OS === 'android'
-        ? StatusBar.currentHeight! + 44
+        ? StatusBar.currentHeight! + 22
         : StatusBarManager.HEIGHT + 34,
     zIndex: 100,
     backgroundColor: 'white',

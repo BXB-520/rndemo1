@@ -6,7 +6,7 @@
  * @format
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   Animated,
   NativeModules,
@@ -18,32 +18,38 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import { Colors } from 'react-native/Libraries/NewAppScreen';
+import {Colors} from 'react-native/Libraries/NewAppScreen';
 import LinearGradient from 'react-native-linear-gradient';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 
-import { hasCameraPermission } from '../../promise/cameraPromise';
+import {hasCameraPermission} from '../../promise/cameraPromise';
 
-import { RNCamera } from 'react-native-camera';
+import {RNCamera} from 'react-native-camera';
 import QRCodeScanner from 'react-native-qrcode-scanner';
 
-const { StatusBarManager } = NativeModules;
+const {StatusBarManager} = NativeModules;
 
-function Qrcode({ navigation }: any): JSX.Element {
-  const cameraRef = useRef(null);
+function Qrcode({navigation}: any): JSX.Element {
+  const [show, setShow] = useState<boolean>(false);
   const isDarkMode = useColorScheme() === 'dark';
 
   const [animation] = useState(new Animated.Value(0));
 
+  const startQrcode = async () => {
+    if (await hasCameraPermission()) {
+      setShow(true);
+      Animated.loop(
+        Animated.timing(animation, {
+          toValue: 1,
+          duration: 3500,
+          useNativeDriver: false,
+        }),
+      ).start();
+    }
+  };
+
   useEffect(() => {
-    hasCameraPermission();
-    Animated.loop(
-      Animated.timing(animation, {
-        toValue: 1,
-        duration: 3500,
-        useNativeDriver: false,
-      }),
-    ).start();
+    startQrcode();
   }, []);
 
   const top = animation.interpolate({
@@ -56,16 +62,17 @@ function Qrcode({ navigation }: any): JSX.Element {
     flex: 1,
   };
 
-  const handleQRCodeScanned = ({ data }: any) => {
+  const handleQRCodeScanned = ({data}: any) => {
     navigation.navigate({
       name: 'Home',
-      params: { qrcodeBackData: data },
+      params: {qrcodeData: data},
       merge: true,
     });
   };
 
-  const onSuccess = e => {
+  const onSuccess = (e: {data: string}) => {
     console.log(e.data);
+    handleQRCodeScanned(e.data);
   };
   return (
     <View style={backgroundStyle}>
@@ -85,24 +92,22 @@ function Qrcode({ navigation }: any): JSX.Element {
         <View style={styles.containerBottom}>
           <Text style={styles.titleBottom}>扫一扫</Text>
         </View>
-        <Animated.View style={[styles.bottomGradient, { top }]}>
-          {/* <LinearGradient
-            colors={['#3678ff00', '#3678ffcc']}
-            style={styles.containerLine}
-          /> */}
+        <Animated.View style={[styles.bottomGradient, {top}]}>
           <LinearGradient
             colors={['#3678ff00', '#3678ffe6', '#3678ff00']}
-            start={{ x: 0, y: 1 }}
-            end={{ x: 1, y: 0 }}
+            start={{x: 0, y: 1}}
+            end={{x: 1, y: 0}}
             style={styles.containerLine}
           />
         </Animated.View>
-        <QRCodeScanner
-          onRead={onSuccess}
-          flashMode={RNCamera.Constants.FlashMode.off}
-          cameraStyle={styles.cameraContainer}
-          containerStyle={styles.cameraContainer}
-        />
+        {show ? (
+          <QRCodeScanner
+            onRead={onSuccess}
+            flashMode={RNCamera.Constants.FlashMode.off}
+            cameraStyle={styles.cameraContainer}
+            containerStyle={styles.cameraContainer}
+          />
+        ) : null}
       </View>
     </View>
   );
@@ -128,9 +133,10 @@ const styles = StyleSheet.create({
   backContent: {
     position: 'absolute',
     zIndex: 100,
-    top: Platform.OS === 'android'
-      ? StatusBar.currentHeight! + 8
-      : StatusBarManager.HEIGHT + 10,
+    top:
+      Platform.OS === 'android'
+        ? StatusBar.currentHeight! + 8
+        : StatusBarManager.HEIGHT + 10,
     left: 20,
     width: 50,
     right: 50,
@@ -161,9 +167,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: '100%',
     textAlign: 'center',
-    top: Platform.OS === 'android'
-      ? StatusBar.currentHeight! + 8
-      : StatusBarManager.HEIGHT + 10,
+    top:
+      Platform.OS === 'android'
+        ? StatusBar.currentHeight! + 8
+        : StatusBarManager.HEIGHT + 10,
     fontSize: 20,
     color: '#ffffff',
     zIndex: 99,
@@ -180,9 +187,10 @@ const styles = StyleSheet.create({
   containerBottom: {
     position: 'absolute',
     width: '100%',
-    height: Platform.OS === 'android'
-      ? StatusBar.currentHeight! + 20
-      : StatusBarManager.HEIGHT + 30,
+    height:
+      Platform.OS === 'android'
+        ? StatusBar.currentHeight! + 20
+        : StatusBarManager.HEIGHT + 30,
     textAlign: 'center',
     bottom: 0,
     backgroundColor: '#000000',
@@ -194,7 +202,7 @@ const styles = StyleSheet.create({
   containerLine: {
     width: '100%',
     height: 6,
-    borderRadius: 0
+    borderRadius: 0,
   },
   titleBottom: {
     fontSize: 18,

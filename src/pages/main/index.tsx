@@ -11,6 +11,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import {
   BackHandler,
   Button,
+  Platform,
   StatusBar,
   Text,
   ToastAndroid,
@@ -30,7 +31,18 @@ import {
   handelDownloadImage,
   HistoryStorage,
   cameraPlugin,
+  handelCameraPlugin,
+  handelQrcode,
 } from '../../plugins/index';
+import {
+  getApiVersion,
+  isWXAppInstalled,
+  openWXApp,
+  registerApp,
+  shareImage,
+  shareText,
+  shareWebpage,
+} from 'react-native-wechat-lib';
 
 function HomeScreen({navigation, route}: any): JSX.Element {
   const webViewRef = useRef<any>(null);
@@ -70,9 +82,25 @@ function HomeScreen({navigation, route}: any): JSX.Element {
     );
   };
 
+  /** 回发扫描的二维码结果 */
+  const handelPostQrcode = (qrcodeData: string) => {
+    postMessageToWeb(
+      {...nowParams.current, model: 200},
+      {qrcodeData: qrcodeData},
+    );
+  };
+
   useEffect(() => {
-    if (route.params?.pictureList) {
-      handelPostPics(route.params?.pictureList);
+    switch (true) {
+      case !!route.params?.pictureList:
+        handelPostPics(route.params?.pictureList);
+        break;
+      case !!route.params?.qrcodeData:
+        handelPostQrcode(route.params?.qrcodeData);
+        break;
+      default:
+        // 处理其他情况
+        break;
     }
   }, [route.params]);
 
@@ -168,9 +196,12 @@ function HomeScreen({navigation, route}: any): JSX.Element {
       case 'HistoryStorage':
         HistoryStorage(params, historyStorage);
         break;
-      case 'useCamera':
-        const resultCamera: any = await cameraPlugin(params);
+      case 'UseCamera':
+        const resultCamera: any = await handelCameraPlugin(params);
         postMessageToWeb(resultCamera, resultCamera.value);
+        break;
+      case 'Qrcode':
+        handelQrcode(params, setlevl, navigation, nowParams);
         break;
 
       default:
@@ -201,9 +232,76 @@ function HomeScreen({navigation, route}: any): JSX.Element {
     };
     let responseStr = JSON.stringify(response);
     const jsString = `(function() {window.RN_WebViewBridge && window.RN_WebViewBridge.onMessage(${responseStr});})()`;
-    // console.log(jsString);
     webViewRef.current?.injectJavaScript(jsString);
     nowParams.current = null;
+  };
+
+  useEffect(() => {
+    console.log('');
+
+    // registerApp('wxfdb7bc274f114f9b', 'universalLink').then(res => {
+    //   console.log('registerApp: ' + res);
+    //   // getApiVersion().then(num => {
+    //   //   console.log('test: ' + num);
+
+    //   //   // openWXApp().then()
+    //   // });
+    // });
+
+    // registerApp('wxfdb7bc274f114f9b', 'com.reactnative.qccq').then(res => {
+    //   console.log('registerApp: ' + res);
+    //   getApiVersion().then(num => {
+    //     console.log('test: ' + num);
+
+    //     // openWXApp().then(() => {
+
+    //     // });
+    //     // shareText({
+    //     //   text: 'test content.',
+    //     //   scene: 0,
+    //     // }).then(
+    //     //   result => {
+    //     //     console.log('result', result);
+    //     //   },
+    //     //   result => {
+    //     //     console.log('result', result);
+    //     //   },
+    //     // );
+
+    //     // shareWebpage({
+    //     //   title: '震惊 这是一条消息！',
+    //     //   description: '这确实是一条消息',
+    //     //   thumbImageUrl: 'http://114.132.187.155:8082/webview/android/11.jpg',
+    //     //   webpageUrl: 'http://114.132.187.155:8082/webview/android/11.jpg',
+    //     //   scene: 0,
+    //     // });
+
+    //     // shareImage({
+    //     //   imageUrl: 'http://114.132.187.155:8082/webview/android/11.jpg',
+    //     //   scene: 0,
+    //     // }).then(
+    //     //   result => {
+    //     //     console.log('result', result);
+    //     //   },
+    //     //   result => {
+    //     //     console.log('result', result);
+    //     //   },
+    //     // );
+    //   });
+    // });
+  }, []);
+
+  const onShouldStartLoadWithRequest = event => {
+    const {url} = event;
+    const isCopyEvent = url.includes('copy:');
+
+    if (isCopyEvent) {
+      // 阻止加载新的请求
+      return false;
+    }
+
+    // 允许加载新的请求
+    return true;
   };
 
   return (
@@ -213,7 +311,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
         barStyle="light-content"
         translucent={true}
       />
-      <View>
+      {/* <View>
         <Text>My WebView Title</Text>
       </View>
       <View>
@@ -245,7 +343,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
           //   });
           // }
         }}
-      />
+      /> */}
 
       <WebView
         ref={webViewRef}
@@ -254,23 +352,25 @@ function HomeScreen({navigation, route}: any): JSX.Element {
         originWhitelist={['*']}
         javaScriptEnabled={true}
         onNavigationStateChange={handleNavigationStateChange}
-        //source={{uri: 'http://114.132.187.155:8082/'}}
-        source={{uri: 'http://219.153.117.192:10001/tabs'}}
+        source={{uri: 'http://114.132.187.155:8082/'}}
         // source={
         //   Platform.OS === 'ios'
         //     ? require('../../assets/www/index.html')
         //     : {
-        //         uri: 'file:///android_asset/www/index.html',
+        //         uri: 'file:///android_asset/dist/index.html',
         //       }
         // }
         useWebKit={true}
         allowFileAccessFromFileURLs={true}
         allowUniversalAccessFromFileURLs={true}
+        onShouldStartLoadWithRequest={onShouldStartLoadWithRequest} //禁止复制
+        keyboardDisplayRequiresUserAction={false} //隐藏ios键盘完成按钮
         onContentProcessDidTerminate={() => {
           webViewRef.current.reload();
         }}
         // userAgent={
-        //   'Mozilla/5.0 (Mac OS X NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
+        //   'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1'
+        //   // 'Mozilla/5.0 (Mac OS X NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
         // }
         // applicationNameForUserAgent={'DemoApp/1.1.0'}
         onMessage={onMessage}

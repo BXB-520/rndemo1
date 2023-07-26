@@ -81,7 +81,7 @@ export const HistoryStorage = (
 };
 
 /** 使用相机拍照 */
-export const cameraPlugin = async (params: any) => {
+export const handelCameraPlugin = async (params: any) => {
   return new Promise(async resolve => {
     if (await hasCameraPermission()) {
       await launchCamera({
@@ -107,4 +107,16 @@ export const cameraPlugin = async (params: any) => {
       resolve({...params, model: 200, value: {base64: ''}});
     }
   });
+};
+
+/** 打开二维码 */
+export const handelQrcode = (
+  params: {params: {checkMax: any; showMax: any}},
+  setlevl: {(value: SetStateAction<boolean>): void; (arg0: boolean): void},
+  navigation: {navigate: (arg0: string, arg1: {}) => void},
+  nowParams: {current: {params: {checkMax: any; showMax: any}}},
+) => {
+  setlevl(true);
+  navigation.navigate('Qrcode', {});
+  nowParams.current = params;
 };
