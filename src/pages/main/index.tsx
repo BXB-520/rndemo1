@@ -21,7 +21,7 @@ import {
 import {WebView, WebViewMessageEvent} from 'react-native-webview';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 import {ImagePickerResponse, launchCamera} from 'react-native-image-picker';
-import RNFS from 'react-native-fs';
+import RNFS, {downloadFile} from 'react-native-fs';
 import {hasCameraPermission} from '../../promise/cameraPromise';
 import {
   handelWebview,
@@ -43,6 +43,8 @@ import {
   shareText,
   shareWebpage,
 } from 'react-native-wechat-lib';
+import downloadFiless from '../../plugins/a';
+import {DownloadFile} from '../../function/downloadFile';
 
 function HomeScreen({navigation, route}: any): JSX.Element {
   const webViewRef = useRef<any>(null);
@@ -73,9 +75,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
         }
       }),
     );
-
     list.sort((start: any, end: any) => start.id - end.id);
-
     postMessageToWeb(
       {...nowParams.current, model: 200},
       {pictureList: list.map((items: any) => items.base64)},
@@ -175,7 +175,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
   const disposeWebMessage = async (params: any) => {
     switch (params.modelName) {
       case 'Webview':
-        const resultWebview = handelWebview(params, setlevl, navigation);
+        const resultWebview: any = handelWebview(params, setlevl, navigation);
         postMessageToWeb(resultWebview, resultWebview.value);
         break;
       case 'StatusBarHeight':
@@ -190,7 +190,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
         postMessageToWeb(resultDelHistory, resultDelHistory.value);
         break;
       case 'DownloadImage':
-        const resultDownloadImage = handelDownloadImage(params);
+        const resultDownloadImage: any = await handelDownloadImage(params);
         postMessageToWeb(resultDownloadImage, resultDownloadImage.value);
         break;
       case 'HistoryStorage':
@@ -217,7 +217,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
   const postMessageToWeb = (
     params: {
       model: any;
-      value?: boolean;
+      value?: string;
       params?: {url: string; title: string} | {ImageList: any[]};
       functionId?: string;
     },
@@ -238,6 +238,24 @@ function HomeScreen({navigation, route}: any): JSX.Element {
 
   useEffect(() => {
     console.log('');
+
+    // RNFetchBlob.config({
+    //   // add this option that makes response data to be stored as a file,
+    //   // this is much more performant.
+    //   Token: 'PHONE_oiiqxfzeyrwtquvwnypnrbae',
+    //   fileCache: true,
+    // })
+    //   .fetch(
+    //     'GET',
+    //     'http://219.153.117.192:9999/api/service-obs/auth/FileController/annexDownload?annexId=1676064290722844673&fileName=%E6%95%B0%E6%8D%AE%E5%A4%84%E7%90%86%E6%B8%85%E5%8D%95%E8%A1%A820230404.xlsx',
+    //     {
+    //       //some headers ..
+    //     },
+    //   )
+    //   .then(res => {
+    //     // the temp file path
+    //     console.log('The file saved to ', res.path());
+    //   });
 
     // registerApp('wxfdb7bc274f114f9b', 'universalLink').then(res => {
     //   console.log('registerApp: ' + res);
@@ -268,25 +286,25 @@ function HomeScreen({navigation, route}: any): JSX.Element {
     //     //   },
     //     // );
 
-    //     // shareWebpage({
-    //     //   title: '震惊 这是一条消息！',
-    //     //   description: '这确实是一条消息',
-    //     //   thumbImageUrl: 'http://114.132.187.155:8082/webview/android/11.jpg',
-    //     //   webpageUrl: 'http://114.132.187.155:8082/webview/android/11.jpg',
-    //     //   scene: 0,
-    //     // });
+    //     shareWebpage({
+    //       title: '震惊 这是一条消息！',
+    //       description: '这确实是一条消息',
+    //       thumbImageUrl: 'http://114.132.187.155:8082/webview/android/11.jpg',
+    //       webpageUrl: 'http://114.132.187.155:8082/webview/android/11.jpg',
+    //       scene: 0,
+    //     });
 
-    //     // shareImage({
-    //     //   imageUrl: 'http://114.132.187.155:8082/webview/android/11.jpg',
-    //     //   scene: 0,
-    //     // }).then(
-    //     //   result => {
-    //     //     console.log('result', result);
-    //     //   },
-    //     //   result => {
-    //     //     console.log('result', result);
-    //     //   },
-    //     // );
+    //     shareImage({
+    //       imageUrl: 'http://114.132.187.155:8082/webview/android/11.jpg',
+    //       scene: 0,
+    //     }).then(
+    //       result => {
+    //         console.log('result', result);
+    //       },
+    //       result => {
+    //         console.log('result', result);
+    //       },
+    //     );
     //   });
     // });
   }, []);
@@ -311,12 +329,6 @@ function HomeScreen({navigation, route}: any): JSX.Element {
         barStyle="light-content"
         translucent={true}
       />
-      {/* <View>
-        <Text>My WebView Title</Text>
-      </View>
-      <View>
-        <Text>My WebView Title</Text>
-      </View>
       <View>
         <Text>My WebView Title</Text>
       </View>
@@ -324,26 +336,12 @@ function HomeScreen({navigation, route}: any): JSX.Element {
       <Button
         title="Go to Details"
         onPress={async () => {
-          setlevl(true);
-          navigation.navigate('Qrcode', {});
-          //webViewRef.current.reload();
-          // if (await hasCameraPermission()) {
-          //   launchCamera({
-          //     mediaType: 'photo',
-          //     includeBase64: true,
-          //     maxWidth: 2,
-          //     maxHeight: 1,
-          //     quality: 1,
-          //   }).then((image: ImagePickerResponse) => {
-          //     console.log(image);
-          //     const {assets} = image;
-          //     if (assets) {
-          //       console.log(assets[0].base64);
-          //     }
-          //   });
-          // }
+          // DownloadFile(
+          //   'http://219.153.117.192:9999/api/service-obs/auth/FileController/annexDownload?annexId=1676064290722844673&fileName=%E6%95%B0%E6%8D%AE%E5%A4%84%E7%90%86%E6%B8%85%E5%8D%95%E8%A1%A820230404.xlsx',
+          //   'xlsx',
+          // );
         }}
-      /> */}
+      />
 
       <WebView
         ref={webViewRef}
@@ -352,17 +350,18 @@ function HomeScreen({navigation, route}: any): JSX.Element {
         originWhitelist={['*']}
         javaScriptEnabled={true}
         onNavigationStateChange={handleNavigationStateChange}
-        source={{uri: 'http://114.132.187.155:8082/'}}
-        // source={
-        //   Platform.OS === 'ios'
-        //     ? require('../../assets/www/index.html')
-        //     : {
-        //         uri: 'file:///android_asset/dist/index.html',
-        //       }
-        // }
+        //source={{uri: 'http://114.132.187.155:8082/'}}
+        source={
+          Platform.OS === 'ios'
+            ? require('../../assets/www/index.html')
+            : {
+                uri: 'file:///android_asset/dist/index.html',
+              }
+        }
         useWebKit={true}
         allowFileAccessFromFileURLs={true}
         allowUniversalAccessFromFileURLs={true}
+        overScrollMode="never" //安卓去除白色拉动动画
         onShouldStartLoadWithRequest={onShouldStartLoadWithRequest} //禁止复制
         keyboardDisplayRequiresUserAction={false} //隐藏ios键盘完成按钮
         onContentProcessDidTerminate={() => {
@@ -372,7 +371,6 @@ function HomeScreen({navigation, route}: any): JSX.Element {
         //   'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1'
         //   // 'Mozilla/5.0 (Mac OS X NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
         // }
-        // applicationNameForUserAgent={'DemoApp/1.1.0'}
         onMessage={onMessage}
         style={{flex: 1}}
       />

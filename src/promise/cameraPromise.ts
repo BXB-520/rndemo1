@@ -1,5 +1,5 @@
-import { Alert, Platform, ToastAndroid } from 'react-native';
-import { PERMISSIONS, request, check } from 'react-native-permissions';
+import {Alert, Platform, ToastAndroid} from 'react-native';
+import {PERMISSIONS, request, check} from 'react-native-permissions';
 
 export async function hasCameraPermission() {
   const getCheckPermissionPromise = () => {
@@ -36,10 +36,8 @@ export async function hasCameraPermission() {
     Alert.alert(
       '提示',
       '没有相机权限！请前往隐私与安全性->相机，打开相机权限！',
-      [
-        { text: '知道了', onPress: () => { } }
-      ]
-    )
+      [{text: '知道了', onPress: () => {}}],
+    );
   }
 
   return false;

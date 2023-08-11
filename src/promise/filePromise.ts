@@ -1,8 +1,7 @@
 import {Alert, Platform, ToastAndroid} from 'react-native';
-import {CameraRoll} from '@react-native-camera-roll/camera-roll';
 import {PERMISSIONS, check, request} from 'react-native-permissions';
 
-export async function hasPicturePermission() {
+export async function hasFilePermission() {
   const getCheckPermissionPromise = () => {
     if (Platform.OS === 'android') {
       return check(PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE);
@@ -36,16 +35,10 @@ export async function hasPicturePermission() {
   } else {
     Alert.alert(
       '提示',
-      '没有照片权限！请前往隐私与安全性->照片，打开照片权限！',
+      '没有照片权限！请前往隐私与安全性->文件，打开文件权限！',
       [{text: '知道了', onPress: () => {}}],
     );
   }
 
   return false;
-}
-
-export async function savePicture(url: string) {
-  if (await hasPicturePermission()) {
-    CameraRoll.save(url);
-  }
 }

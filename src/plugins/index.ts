@@ -1,11 +1,14 @@
 import {SetStateAction} from 'react';
 import {NativeModules, Platform, StatusBar} from 'react-native';
-import {DownloadImage} from '../hooks/downloadPicture';
+import {DownloadImage} from '../function/downloadImage';
 import {hasCameraPermission} from '../promise/cameraPromise';
 import {ImagePickerResponse, launchCamera} from 'react-native-image-picker';
+import {DownloadFile} from '../function/downloadFile';
+import {hasPicturePermission} from '../promise/picturePromise';
+import {hasFilePermission} from '../promise/filePromise';
 
 /** 打开webview */
-export const handelWebview = (
+const handelWebview = (
   params: {params: {url: any; title: any}},
   setlevl: {(value: SetStateAction<boolean>): void; (arg0: boolean): void},
   navigation: {
@@ -23,7 +26,7 @@ export const handelWebview = (
 
 const {StatusBarManager} = NativeModules;
 /** 通知状态栏高度 */
-export const handelStatusBarHeight = (params: any) => {
+const handelStatusBarHeight = (params: any) => {
   const value = {
     statusBarHeight:
       Platform.OS === 'android'
@@ -34,7 +37,7 @@ export const handelStatusBarHeight = (params: any) => {
 };
 
 /** 打开图片并选择 */
-export const handelCheckPicture = (
+const handelCheckPicture = (
   params: {params: {checkMax: any; showMax: any}},
   setlevl: {(value: SetStateAction<boolean>): void; (arg0: boolean): void},
   navigation: {
@@ -51,7 +54,7 @@ export const handelCheckPicture = (
 };
 
 /** 清除路由 */
-export const handelDelHistory = (
+const handelDelHistory = (
   params: any,
   setcanGoBack: (arg0: boolean) => void,
 ) => {
@@ -60,16 +63,48 @@ export const handelDelHistory = (
 };
 
 /** 批量下载图片 */
-export const handelDownloadImage = (params: {params: {ImageList: any[]}}) => {
-  params.params.ImageList.map((items: string) => {
-    const result = DownloadImage(items);
-    console.log('result', result);
+const handelDownloadImage = async (params: {params: {ImageList: any[]}}) => {
+  return new Promise(async resolve => {
+    if (await hasPicturePermission()) {
+      params.params.ImageList.map((items: string) => {
+        const result = DownloadImage(items);
+        console.log('result', result);
+      });
+      resolve({...params, model: 200, value: true});
+    } else {
+      resolve({...params, model: 200, value: false});
+    }
   });
-  return {...params, model: 200, value: true};
+};
+
+/** 批量下载文件 */
+const handelDownloadFile = async (params: {
+  params: {
+    token: string;
+    FileList: {url: string; fileType: 'xlsx' | 'pdf' | 'docx'}[];
+  };
+}) => {
+  return new Promise(async resolve => {
+    if (await hasFilePermission()) {
+      params.params.FileList.map(
+        (items: {url: string; fileType: 'xlsx' | 'pdf' | 'docx'}) => {
+          const result = DownloadFile(
+            items.url,
+            params.params.token,
+            items.fileType,
+          );
+          console.log('result', result);
+        },
+      );
+      resolve({...params, model: 200, value: true});
+    } else {
+      resolve({...params, model: 200, value: false});
+    }
+  });
 };
 
 /** 安卓返回堆栈 */
-export const HistoryStorage = (
+const HistoryStorage = (
   params: {params: {type: string}},
   historyStorage: {current: any[]},
 ) => {
@@ -81,7 +116,7 @@ export const HistoryStorage = (
 };
 
 /** 使用相机拍照 */
-export const handelCameraPlugin = async (params: any) => {
+const handelCameraPlugin = async (params: any) => {
   return new Promise(async resolve => {
     if (await hasCameraPermission()) {
       await launchCamera({
@@ -110,7 +145,7 @@ export const handelCameraPlugin = async (params: any) => {
 };
 
 /** 打开二维码 */
-export const handelQrcode = (
+const handelQrcode = (
   params: {params: {checkMax: any; showMax: any}},
   setlevl: {(value: SetStateAction<boolean>): void; (arg0: boolean): void},
   navigation: {navigate: (arg0: string, arg1: {}) => void},
@@ -119,4 +154,16 @@ export const handelQrcode = (
   setlevl(true);
   navigation.navigate('Qrcode', {});
   nowParams.current = params;
+};
+
+export {
+  handelWebview,
+  handelStatusBarHeight,
+  handelCheckPicture,
+  handelDelHistory,
+  handelDownloadImage,
+  handelDownloadFile,
+  HistoryStorage,
+  handelCameraPlugin,
+  handelQrcode,
 };

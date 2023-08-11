@@ -1,5 +1,4 @@
 import {CameraRoll} from '@react-native-camera-roll/camera-roll';
-import {Platform} from 'react-native';
 import RNFS from 'react-native-fs';
 
 /**
@@ -14,10 +13,10 @@ export const DownloadImage = (uri: string) => {
   return new Promise((resolve, reject) => {
     let timestamp = new Date().getTime(); //获取当前时间错
     let random = String(Math.random() * 1000000); //六位随机数
-    let dirs =
-      Platform.OS === 'ios'
-        ? RNFS.LibraryDirectoryPath
-        : RNFS.ExternalDirectoryPath; //外部文件，共享目录的绝对路径（仅限android）
+    let dirs = RNFS.CachesDirectoryPath; //存到缓存
+    // Platform.OS === 'ios'
+    //   ? RNFS.LibraryDirectoryPath
+    //   : RNFS.ExternalDirectoryPath; //外部文件，共享目录的绝对路径（仅限android）
     const downloadDest = `${dirs}/${timestamp + random}.jpg`;
     const formUrl = uri;
     const options = {
@@ -30,20 +29,18 @@ export const DownloadImage = (uri: string) => {
       },
     };
     try {
-      const ret = RNFS.downloadFile(options);
-      ret.promise
-        .then(res => {
-          const promise = CameraRoll.save('file://' + downloadDest, {
+      RNFS.downloadFile(options)
+        .promise.then(res => {
+          console.log(downloadDest);
+          CameraRoll.save('file://' + downloadDest, {
             type: 'auto',
             album: 'qccq',
-          });
-          promise
+          })
             .then(function (result) {
               console.log('保存成功！地址如下' + result);
             })
             .catch(function (error) {
-              console.log('error', error);
-              // alert('保存失败！\n' + error);
+              console.log('保存失败！', error);
             });
           resolve(res);
         })

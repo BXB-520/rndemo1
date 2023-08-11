@@ -27,7 +27,7 @@ import Feather from 'react-native-vector-icons/Feather';
 import LinearGradient from 'react-native-linear-gradient';
 import ImageResizer from 'react-native-image-resizer';
 import AsyncButton from './asyncButton';
-import {throttle} from '../../hooks/systemCapability';
+import {throttle} from '../../function/systemCapability';
 import {hasPicturePermission} from '../../promise/picturePromise';
 
 const {StatusBarManager} = NativeModules;
