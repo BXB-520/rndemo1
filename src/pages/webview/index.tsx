@@ -128,8 +128,8 @@ const styles = StyleSheet.create({
   header: {
     height:
       Platform.OS === 'android'
-        ? StatusBar.currentHeight! + 44
-        : StatusBarManager.HEIGHT + 44,
+        ? StatusBar.currentHeight! + 46
+        : StatusBarManager.HEIGHT + 46,
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',

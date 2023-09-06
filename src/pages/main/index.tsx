@@ -339,17 +339,17 @@ function HomeScreen({navigation, route}: any): JSX.Element {
     //       scene: 0,
     //     });
 
-    //     shareImage({
-    //       imageUrl: 'http://114.132.187.155:8082/webview/android/11.jpg',
-    //       scene: 0,
-    //     }).then(
-    //       result => {
-    //         console.log('result', result);
-    //       },
-    //       result => {
-    //         console.log('result', result);
-    //       },
-    //     );
+    //     // shareImage({
+    //     //   imageUrl: 'http://114.132.187.155:8082/webview/android/11.jpg',
+    //     //   scene: 0,
+    //     // }).then(
+    //     //   result => {
+    //     //     console.log('result', result);
+    //     //   },
+    //     //   result => {
+    //     //     console.log('result', result);
+    //     //   },
+    //     // );
     //   });
     // });
   }, []);
@@ -372,19 +372,16 @@ function HomeScreen({navigation, route}: any): JSX.Element {
         barStyle="light-content"
         translucent={true}
       />
-      <View>
+      {/* <View>
         <Text>My WebView Title</Text>
       </View>
 
       <Button
         title="Go to Details"
         onPress={async () => {
-          // DownloadFile(
-          //   'http://219.153.117.192:9999/api/service-obs/auth/FileController/annexDownload?annexId=1676064290722844673&fileName=%E6%95%B0%E6%8D%AE%E5%A4%84%E7%90%86%E6%B8%85%E5%8D%95%E8%A1%A820230404.xlsx',
-          //   'xlsx',
-          // );
+          
         }}
-      />
+      /> */}
 
       <WebView
         ref={webViewRef}
@@ -393,7 +390,8 @@ function HomeScreen({navigation, route}: any): JSX.Element {
         originWhitelist={['*']}
         javaScriptEnabled={true}
         onNavigationStateChange={handleNavigationStateChange}
-        source={{uri: 'http://youth.cq.cqyl.org.cn:11021'}}
+        source={{uri: 'http://1.14.44.66:2748'}}
+        //source={{uri: 'http://youth.cq.cqyl.org.cn:11021'}}
         // source={
         //   Platform.OS === 'ios'
         //     ? require('../../assets/www/index.html')
