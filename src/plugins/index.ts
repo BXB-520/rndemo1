@@ -14,6 +14,7 @@ const handelWebview = (
   navigation: {
     navigate: (arg0: string, arg1: {outUrl: any; outName: any}) => void;
   },
+  nowParams: {current: {params: {url: any; title: any}}},
 ) => {
   setlevl(true);
   navigation.navigate('Webview', {
@@ -21,7 +22,8 @@ const handelWebview = (
     outName: params.params.title,
   });
 
-  return {...params, model: 200, value: true};
+  nowParams.current = params;
+  return {...params, value: true};
 };
 
 const {StatusBarManager} = NativeModules;
@@ -33,7 +35,7 @@ const handelStatusBarHeight = (params: any) => {
         ? StatusBar.currentHeight
         : StatusBarManager.HEIGHT,
   };
-  return {...params, model: 200, value: value};
+  return {...params, value: value};
 };
 
 /** 打开图片并选择 */
@@ -51,6 +53,7 @@ const handelCheckPicture = (
     showMax: params.params.showMax,
   });
   nowParams.current = params;
+  return {...params, value: true};
 };
 
 /** 清除路由 */
@@ -59,20 +62,24 @@ const handelDelHistory = (
   setcanGoBack: (arg0: boolean) => void,
 ) => {
   setcanGoBack(true);
-  return {...params, model: 200, value: true};
+  return {...params, value: true};
 };
 
 /** 批量下载图片 */
-const handelDownloadImage = async (params: {params: {ImageList: any[]}}) => {
+const handelDownloadImage = async (
+  params: {params: {ImageList: any[]}},
+  postMessageToWeb: Function,
+) => {
   return new Promise(async resolve => {
     if (await hasPicturePermission()) {
+      postMessageToWeb({...params, value: true});
       params.params.ImageList.map((items: string) => {
         const result = DownloadImage(items);
         console.log('result', result);
       });
-      resolve({...params, model: 200, value: true});
+      resolve({...params, status: '2', value: true});
     } else {
-      resolve({...params, model: 200, value: false});
+      resolve({...params, status: '0', value: false});
     }
   });
 };
@@ -113,12 +120,14 @@ const HistoryStorage = (
   } else {
     historyStorage.current.pop();
   }
+  return {...params, value: true};
 };
 
 /** 使用相机拍照 */
-const handelCameraPlugin = async (params: any) => {
+const handelCameraPlugin = async (params: any, postMessageToWeb: Function) => {
   return new Promise(async resolve => {
     if (await hasCameraPermission()) {
+      postMessageToWeb({...params, value: true});
       await launchCamera({
         mediaType: 'photo',
         includeBase64: true,
@@ -131,15 +140,15 @@ const handelCameraPlugin = async (params: any) => {
         if (assets) {
           resolve({
             ...params,
-            model: 200,
+            status: '2',
             value: {base64: `data:image/png;base64,${assets[0].base64}`},
           });
         } else {
-          resolve({...params, model: 200, value: {base64: ''}});
+          resolve({...params, status: '2', value: {base64: ''}});
         }
       });
     } else {
-      resolve({...params, model: 200, value: {base64: ''}});
+      resolve({...params, status: '0', value: '没有相机权限'});
     }
   });
 };
@@ -154,6 +163,7 @@ const handelQrcode = (
   setlevl(true);
   navigation.navigate('Qrcode', {});
   nowParams.current = params;
+  return {...params, value: true};
 };
 
 export {

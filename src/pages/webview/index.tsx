@@ -30,13 +30,11 @@ function WebViews({navigation, route}: any): JSX.Element {
   };
 
   useEffect(() => {
-    if (route.params?.qrcodeBackData) {
-      console.log('route.params?.qrcodeBackData', route.params?.qrcodeBackData);
-      webViewRef.current?.postMessage(
-        JSON.stringify({qrcodeBackData: route.params?.qrcodeBackData}),
-      );
-    }
-  }, [route.params?.qrcodeBackData]);
+    // navigation.addListener('beforeRemove', e => {
+    //   console.log('999999999999999999999999999999');
+    //   //clear setInterval here and go back
+    // });
+  }, []);
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
@@ -47,7 +45,8 @@ function WebViews({navigation, route}: any): JSX.Element {
             setlevl(false);
             return false;
           }
-          navigation.pop();
+          //navigation.pop();
+          handleCloseWebview();
           return true;
         } else {
           webViewRef.current.goBack();
@@ -65,6 +64,15 @@ function WebViews({navigation, route}: any): JSX.Element {
     setcanGoBack(!navState.canGoBack);
   };
 
+  /** 关闭WebViewchufa */
+  const handleCloseWebview = () => {
+    navigation.navigate({
+      name: 'Home',
+      params: {webView: {status: 'close'}},
+      merge: true,
+    });
+  };
+
   return (
     <View style={backgroundStyle}>
       <StatusBar barStyle="light-content" />
@@ -76,7 +84,7 @@ function WebViews({navigation, route}: any): JSX.Element {
         <TouchableWithoutFeedback
           onPress={() => {
             if (canGoBack) {
-              navigation.pop();
+              handleCloseWebview();
             } else {
               webViewRef.current.goBack();
             }
@@ -88,7 +96,7 @@ function WebViews({navigation, route}: any): JSX.Element {
 
         <TouchableWithoutFeedback
           onPress={() => {
-            navigation.pop();
+            handleCloseWebview();
           }}>
           <View style={styles.close}>
             <AntDesign name="close" color={'#ffffff'} size={25} />

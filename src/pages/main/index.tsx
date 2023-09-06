@@ -52,7 +52,8 @@ function HomeScreen({navigation, route}: any): JSX.Element {
   const historyStorage = useRef<any>([]);
 
   const [canGoBack, setcanGoBack] = useState(false);
-  const [levl, setlevl] = useState(false);
+  /** 是否离开了主webview */
+  const [leave, setLeave] = useState(false);
 
   const isDarkMode = useColorScheme() === 'dark';
 
@@ -77,17 +78,26 @@ function HomeScreen({navigation, route}: any): JSX.Element {
     );
     list.sort((start: any, end: any) => start.id - end.id);
     postMessageToWeb(
-      {...nowParams.current, model: 200},
-      {pictureList: list.map((items: any) => items.base64)},
+      {
+        ...nowParams.current,
+        status: '2',
+        value: {pictureList: list.map((items: any) => items.base64)},
+      },
+      true,
     );
   };
 
   /** 回发扫描的二维码结果 */
   const handelPostQrcode = (qrcodeData: string) => {
     postMessageToWeb(
-      {...nowParams.current, model: 200},
-      {qrcodeData: qrcodeData},
+      {...nowParams.current, status: '2', value: qrcodeData},
+      true,
     );
+  };
+
+  /** webview被关闭了 */
+  const handelPostWebview = (webview: string) => {
+    postMessageToWeb({...nowParams.current, status: '2', value: webview}, true);
   };
 
   useEffect(() => {
@@ -97,6 +107,9 @@ function HomeScreen({navigation, route}: any): JSX.Element {
         break;
       case !!route.params?.qrcodeData:
         handelPostQrcode(route.params?.qrcodeData);
+        break;
+      case !!route.params?.webView:
+        handelPostWebview(route.params?.webView);
         break;
       default:
         // 处理其他情况
@@ -111,8 +124,8 @@ function HomeScreen({navigation, route}: any): JSX.Element {
       'hardwareBackPress',
       () => {
         if (backHandlerPressedCount < 1) {
-          if (levl) {
-            setlevl(false);
+          if (leave) {
+            setLeave(false);
             return false;
           }
 
@@ -126,7 +139,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
           } else {
             if (historyStorage.current.length) {
               const params = historyStorage.current.pop();
-              postMessageToWeb({...params, model: 200}, true);
+              postMessageToWeb({...params, status: '2', value: 'true'}, true);
               return true;
             }
             webViewRef.current.goBack();
@@ -141,12 +154,12 @@ function HomeScreen({navigation, route}: any): JSX.Element {
     );
 
     return () => backHandler.remove();
-  }, [canGoBack, levl]);
+  }, [canGoBack, leave]);
 
   /** 到首页执行 */
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-      setlevl(false);
+      setLeave(false);
     });
     return unsubscribe;
   }, [navigation]);
@@ -172,36 +185,61 @@ function HomeScreen({navigation, route}: any): JSX.Element {
     disposeWebMessage(params);
   };
 
+  /** 业务判断 */
   const disposeWebMessage = async (params: any) => {
     switch (params.modelName) {
-      case 'Webview':
-        const resultWebview: any = handelWebview(params, setlevl, navigation);
-        postMessageToWeb(resultWebview, resultWebview.value);
+      case 'Webview': //Webview 返回状态1 2
+        const resultWebview = handelWebview(
+          params,
+          setLeave,
+          navigation,
+          nowParams,
+        );
+        postMessageToWeb(resultWebview);
         break;
-      case 'StatusBarHeight':
+      case 'StatusBarHeight': //StatusBarHeight 返回状态1
         const resultHeight = handelStatusBarHeight(params);
-        postMessageToWeb(resultHeight, resultHeight.value);
+        postMessageToWeb(resultHeight, true);
         break;
-      case 'CheckPicture':
-        handelCheckPicture(params, setlevl, navigation, nowParams);
+      case 'CheckPicture': //CheckPicture 返回状态1 2
+        const resultCheckPicture = handelCheckPicture(
+          params,
+          setLeave,
+          navigation,
+          nowParams,
+        );
+        postMessageToWeb(resultCheckPicture);
         break;
-      case 'DelHistory':
+      case 'DelHistory': //DelHistory 返回状态1
         const resultDelHistory = handelDelHistory(params, setcanGoBack);
-        postMessageToWeb(resultDelHistory, resultDelHistory.value);
+        postMessageToWeb(resultDelHistory, true);
         break;
-      case 'DownloadImage':
-        const resultDownloadImage: any = await handelDownloadImage(params);
-        postMessageToWeb(resultDownloadImage, resultDownloadImage.value);
+      case 'DownloadImage': //DownloadImage 返回状态0 1 2
+        const resultDownloadImage: any = await handelDownloadImage(
+          params,
+          postMessageToWeb,
+        );
+        postMessageToWeb(resultDownloadImage, true);
         break;
-      case 'HistoryStorage':
-        HistoryStorage(params, historyStorage);
+      case 'HistoryStorage': //HistoryStorage 返回状态1 2
+        const resultStorage = HistoryStorage(params, historyStorage);
+        postMessageToWeb(resultStorage);
         break;
-      case 'UseCamera':
-        const resultCamera: any = await handelCameraPlugin(params);
-        postMessageToWeb(resultCamera, resultCamera.value);
+      case 'UseCamera': //UseCamera 返回状态0 1 2
+        const resultCamera: any = await handelCameraPlugin(
+          params,
+          postMessageToWeb,
+        );
+        postMessageToWeb(resultCamera, true);
         break;
-      case 'Qrcode':
-        handelQrcode(params, setlevl, navigation, nowParams);
+      case 'Qrcode': //Qrcode 返回状态1 2
+        const resultQrcode = handelQrcode(
+          params,
+          setLeave,
+          navigation,
+          nowParams,
+        );
+        postMessageToWeb(resultQrcode);
         break;
 
       default:
@@ -216,24 +254,31 @@ function HomeScreen({navigation, route}: any): JSX.Element {
    */
   const postMessageToWeb = (
     params: {
-      model: any;
-      value?: string;
-      params?: {url: string; title: string} | {ImageList: any[]};
+      status?: string;
+      message?: string;
+      model?: any;
+      value?: any;
       functionId?: string;
     },
-    value: any,
+    needClear?: boolean,
   ) => {
-    let response = {
-      model: params.model,
+    const response = {
       functionId: params.functionId,
-      value: value ? value : undefined,
-      status: value?.status ? value?.status : '0', //默认都返回0表示js-sdk调用成功，当value中有status时，则使用value中的status
-      message: `${params.model}:ok`,
+      model: params.model ?? 200,
+      status: params.status ?? '1', //0:失败 1:成功 2:异步数据
+      value: params.value ?? undefined,
+      message: params.message ?? 'success',
+      delete: needClear, //通信完成是否删除
     };
-    let responseStr = JSON.stringify(response);
+    const responseStr = JSON.stringify(response);
+    console.log('response', responseStr);
+
     const jsString = `(function() {window.RN_WebViewBridge && window.RN_WebViewBridge.onMessage(${responseStr});})()`;
     webViewRef.current?.injectJavaScript(jsString);
-    nowParams.current = null;
+    /** 通信完成是否删除 */
+    if (needClear) {
+      nowParams.current = null;
+    }
   };
 
   useEffect(() => {
@@ -309,15 +354,13 @@ function HomeScreen({navigation, route}: any): JSX.Element {
     // });
   }, []);
 
-  const onShouldStartLoadWithRequest = event => {
+  const onShouldStartLoadWithRequest = (event: {url: any}) => {
     const {url} = event;
     const isCopyEvent = url.includes('copy:');
-
     if (isCopyEvent) {
       // 阻止加载新的请求
       return false;
     }
-
     // 允许加载新的请求
     return true;
   };
@@ -350,14 +393,14 @@ function HomeScreen({navigation, route}: any): JSX.Element {
         originWhitelist={['*']}
         javaScriptEnabled={true}
         onNavigationStateChange={handleNavigationStateChange}
-        //source={{uri: 'http://114.132.187.155:8082/'}}
-        source={
-          Platform.OS === 'ios'
-            ? require('../../assets/www/index.html')
-            : {
-                uri: 'file:///android_asset/dist/index.html',
-              }
-        }
+        source={{uri: 'http://youth.cq.cqyl.org.cn:11021'}}
+        // source={
+        //   Platform.OS === 'ios'
+        //     ? require('../../assets/www/index.html')
+        //     : {
+        //         uri: 'file:///android_asset/dist/index.html',
+        //       }
+        // }
         useWebKit={true}
         allowFileAccessFromFileURLs={true}
         allowUniversalAccessFromFileURLs={true}
