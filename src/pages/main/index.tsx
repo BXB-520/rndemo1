@@ -10,19 +10,16 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {
   BackHandler,
-  Button,
+  KeyboardAvoidingView,
   Platform,
   StatusBar,
-  Text,
   ToastAndroid,
   View,
   useColorScheme,
 } from 'react-native';
 import {WebView, WebViewMessageEvent} from 'react-native-webview';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
-import {ImagePickerResponse, launchCamera} from 'react-native-image-picker';
-import RNFS, {downloadFile} from 'react-native-fs';
-import {hasCameraPermission} from '../../promise/cameraPromise';
+import RNFS from 'react-native-fs';
 import {
   handelWebview,
   handelStatusBarHeight,
@@ -30,21 +27,12 @@ import {
   handelDelHistory,
   handelDownloadImage,
   HistoryStorage,
-  cameraPlugin,
   handelCameraPlugin,
   handelQrcode,
+  handeluseNfc,
+  handelDownloadFile,
+  handleOpenWxShare,
 } from '../../plugins/index';
-import {
-  getApiVersion,
-  isWXAppInstalled,
-  openWXApp,
-  registerApp,
-  shareImage,
-  shareText,
-  shareWebpage,
-} from 'react-native-wechat-lib';
-import downloadFiless from '../../plugins/a';
-import {DownloadFile} from '../../function/downloadFile';
 
 function HomeScreen({navigation, route}: any): JSX.Element {
   const webViewRef = useRef<any>(null);
@@ -90,7 +78,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
   /** 回发扫描的二维码结果 */
   const handelPostQrcode = (qrcodeData: string) => {
     postMessageToWeb(
-      {...nowParams.current, status: '2', value: qrcodeData},
+      {...nowParams.current, status: '2', value: {qrcodeData}},
       true,
     );
   };
@@ -170,6 +158,13 @@ function HomeScreen({navigation, route}: any): JSX.Element {
   };
 
   const onMessage = (event: WebViewMessageEvent) => {
+    // const data = JSON.parse(event.nativeEvent.data);
+    // if (data.type === 'copy') {
+    //   // 阻止默认行为
+    //   event.preventDefault();
+    //   // 在此处可以执行自定义操作
+    // }
+
     let data = event.nativeEvent.data;
     console.log('onMessage ', event.nativeEvent.data);
     let params = null;
@@ -181,6 +176,8 @@ function HomeScreen({navigation, route}: any): JSX.Element {
     if (!params) {
       return;
     }
+    console.log('params', params);
+
     // 可以根据params.modelName来判断处理什么业务
     disposeWebMessage(params);
   };
@@ -221,6 +218,13 @@ function HomeScreen({navigation, route}: any): JSX.Element {
         );
         postMessageToWeb(resultDownloadImage, true);
         break;
+      case 'DownloadFile': //DownloadFile 返回状态0 1 2
+        const resultDownloadFile: any = await handelDownloadFile(
+          params,
+          postMessageToWeb,
+        );
+        postMessageToWeb(resultDownloadFile, true);
+        break;
       case 'HistoryStorage': //HistoryStorage 返回状态1 2
         const resultStorage = HistoryStorage(params, historyStorage);
         postMessageToWeb(resultStorage);
@@ -240,6 +244,14 @@ function HomeScreen({navigation, route}: any): JSX.Element {
           nowParams,
         );
         postMessageToWeb(resultQrcode);
+        break;
+      case 'UseNfc': //UseNfc 返回状态1 2
+        const resultUseNfc: any = await handeluseNfc(params, postMessageToWeb);
+        postMessageToWeb(resultUseNfc, true);
+        break;
+      case 'WxShare': //WxShare 返回状态0 1
+        const resultWxShare: any = await handleOpenWxShare(params);
+        postMessageToWeb(resultWxShare, true);
         break;
 
       default:
@@ -281,89 +293,7 @@ function HomeScreen({navigation, route}: any): JSX.Element {
     }
   };
 
-  useEffect(() => {
-    console.log('');
-
-    // RNFetchBlob.config({
-    //   // add this option that makes response data to be stored as a file,
-    //   // this is much more performant.
-    //   Token: 'PHONE_oiiqxfzeyrwtquvwnypnrbae',
-    //   fileCache: true,
-    // })
-    //   .fetch(
-    //     'GET',
-    //     'http://219.153.117.192:9999/api/service-obs/auth/FileController/annexDownload?annexId=1676064290722844673&fileName=%E6%95%B0%E6%8D%AE%E5%A4%84%E7%90%86%E6%B8%85%E5%8D%95%E8%A1%A820230404.xlsx',
-    //     {
-    //       //some headers ..
-    //     },
-    //   )
-    //   .then(res => {
-    //     // the temp file path
-    //     console.log('The file saved to ', res.path());
-    //   });
-
-    // registerApp('wxfdb7bc274f114f9b', 'universalLink').then(res => {
-    //   console.log('registerApp: ' + res);
-    //   // getApiVersion().then(num => {
-    //   //   console.log('test: ' + num);
-
-    //   //   // openWXApp().then()
-    //   // });
-    // });
-
-    // registerApp('wxfdb7bc274f114f9b', 'com.reactnative.qccq').then(res => {
-    //   console.log('registerApp: ' + res);
-    //   getApiVersion().then(num => {
-    //     console.log('test: ' + num);
-
-    //     // openWXApp().then(() => {
-
-    //     // });
-    //     // shareText({
-    //     //   text: 'test content.',
-    //     //   scene: 0,
-    //     // }).then(
-    //     //   result => {
-    //     //     console.log('result', result);
-    //     //   },
-    //     //   result => {
-    //     //     console.log('result', result);
-    //     //   },
-    //     // );
-
-    //     shareWebpage({
-    //       title: '震惊 这是一条消息！',
-    //       description: '这确实是一条消息',
-    //       thumbImageUrl: 'http://114.132.187.155:8082/webview/android/11.jpg',
-    //       webpageUrl: 'http://114.132.187.155:8082/webview/android/11.jpg',
-    //       scene: 0,
-    //     });
-
-    //     // shareImage({
-    //     //   imageUrl: 'http://114.132.187.155:8082/webview/android/11.jpg',
-    //     //   scene: 0,
-    //     // }).then(
-    //     //   result => {
-    //     //     console.log('result', result);
-    //     //   },
-    //     //   result => {
-    //     //     console.log('result', result);
-    //     //   },
-    //     // );
-    //   });
-    // });
-  }, []);
-
-  const onShouldStartLoadWithRequest = (event: {url: any}) => {
-    const {url} = event;
-    const isCopyEvent = url.includes('copy:');
-    if (isCopyEvent) {
-      // 阻止加载新的请求
-      return false;
-    }
-    // 允许加载新的请求
-    return true;
-  };
+  useEffect(() => {}, []);
 
   return (
     <View style={backgroundStyle}>
@@ -373,48 +303,52 @@ function HomeScreen({navigation, route}: any): JSX.Element {
         translucent={true}
       />
       {/* <View>
-        <Text>My WebView Title</Text>
-      </View>
+      <Text>My WebView Title</Text>
+    </View>
 
-      <Button
-        title="Go to Details"
-        onPress={async () => {
-          
-        }}
-      /> */}
-
-      <WebView
-        ref={webViewRef}
-        cacheEnabled={false}
-        cacheMode="LOAD_NO_CACHE"
-        originWhitelist={['*']}
-        javaScriptEnabled={true}
-        onNavigationStateChange={handleNavigationStateChange}
-        source={{uri: 'http://1.14.44.66:2748'}}
-        //source={{uri: 'http://youth.cq.cqyl.org.cn:11021'}}
-        // source={
-        //   Platform.OS === 'ios'
-        //     ? require('../../assets/www/index.html')
-        //     : {
-        //         uri: 'file:///android_asset/dist/index.html',
-        //       }
-        // }
-        useWebKit={true}
-        allowFileAccessFromFileURLs={true}
-        allowUniversalAccessFromFileURLs={true}
-        overScrollMode="never" //安卓去除白色拉动动画
-        onShouldStartLoadWithRequest={onShouldStartLoadWithRequest} //禁止复制
-        keyboardDisplayRequiresUserAction={false} //隐藏ios键盘完成按钮
-        onContentProcessDidTerminate={() => {
-          webViewRef.current.reload();
-        }}
-        // userAgent={
-        //   'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1'
-        //   // 'Mozilla/5.0 (Mac OS X NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
-        // }
-        onMessage={onMessage}
-        style={{flex: 1}}
-      />
+    <Button
+      title="Go to Details"
+      onPress={async () => {
+        12
+      }}
+    /> */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{flex: 1}}>
+        <WebView
+          ref={webViewRef}
+          cacheEnabled={false}
+          cacheMode="LOAD_NO_CACHE"
+          originWhitelist={['*']}
+          javaScriptEnabled={true}
+          onNavigationStateChange={handleNavigationStateChange}
+          //source={{uri: 'http://1.14.44.66:2748'}}
+          source={{uri: 'http://www.qweryui.top:10010'}}
+          // source={
+          //   Platform.OS === 'ios'
+          //     ? require('../../assets/www/index.html')
+          //     : {
+          //         uri: 'file:///android_asset/dist/index.html',
+          //       }
+          // }
+          useWebKit={true}
+          allowFileAccessFromFileURLs={true}
+          allowUniversalAccessFromFileURLs={true}
+          overScrollMode="never" //安卓去除白色拉动动画
+          scrollEnabled
+          onContentProcessDidTerminate={() => {
+            webViewRef.current.reload();
+          }}
+          // userAgent={
+          //   'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1'
+          //   // 'Mozilla/5.0 (Mac OS X NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
+          // }
+          onMessage={onMessage}
+          style={{
+            flex: 1,
+          }}
+        />
+      </KeyboardAvoidingView>
     </View>
   );
 }

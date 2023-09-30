@@ -11,7 +11,8 @@ import RNFS from 'react-native-fs';
 export const DownloadFile = (
   uri: string,
   token: string,
-  type: 'xlsx' | 'pdf' | 'docx',
+  type: 'xlsx' | 'pdf' | 'docx' | 'apk',
+  postNewProgess: {(percentage: any): void; (arg0: number): void},
 ) => {
   if (!uri || !token || !type) {
     return null;
@@ -35,6 +36,12 @@ export const DownloadFile = (
       begin: () => {
         // console.log('begin', res);
         // console.log('contentLength:', res.contentLength / 1024 / 1024, 'M');
+      },
+      progress: (data: {bytesWritten: number; contentLength: number}) => {
+        const progress = data.bytesWritten / data.contentLength;
+        const percentage = Math.round(progress * 100);
+        // console.log(`Downloaded ${percentage}%`);
+        postNewProgess(percentage);
       },
     };
     try {

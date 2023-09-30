@@ -59,7 +59,7 @@ function Qrcode({navigation}: any): JSX.Element {
     flex: 1,
   };
 
-  const handleQRCodeScanned = ({data}: any) => {
+  const handleQRCodeScanned = (data: any) => {
     navigation.navigate({
       name: 'Home',
       params: {qrcodeData: data},

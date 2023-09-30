@@ -2,6 +2,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {
   BackHandler,
+  KeyboardAvoidingView,
   NativeModules,
   Platform,
   StatusBar,
@@ -24,18 +25,6 @@ function WebViews({navigation, route}: any): JSX.Element {
   const [canGoBack, setcanGoBack] = useState(false);
   const [levl, setlevl] = useState(false);
 
-  const backgroundStyle = {
-    backgroundColor: '#ffffff',
-    flex: 1,
-  };
-
-  useEffect(() => {
-    // navigation.addListener('beforeRemove', e => {
-    //   console.log('999999999999999999999999999999');
-    //   //clear setInterval here and go back
-    // });
-  }, []);
-
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
       'hardwareBackPress',
@@ -45,7 +34,6 @@ function WebViews({navigation, route}: any): JSX.Element {
             setlevl(false);
             return false;
           }
-          //navigation.pop();
           handleCloseWebview();
           return true;
         } else {
@@ -74,7 +62,7 @@ function WebViews({navigation, route}: any): JSX.Element {
   };
 
   return (
-    <View style={backgroundStyle}>
+    <View style={styles.backgroundStyle}>
       <StatusBar barStyle="light-content" />
       <View style={styles.header}>
         <LinearGradient
@@ -105,26 +93,33 @@ function WebViews({navigation, route}: any): JSX.Element {
 
         <Text style={styles.title}>{outName}</Text>
       </View>
-
-      <WebView
-        ref={webViewRef}
-        originWhitelist={['*']}
-        javaScriptEnabled={true}
-        onNavigationStateChange={handleNavigationStateChange}
-        source={{uri: outUrl}}
-        useWebKit={true}
-        allowFileAccessFromFileURLs={true}
-        allowUniversalAccessFromFileURLs={true}
-        onContentProcessDidTerminate={() => {
-          webViewRef.current.reload();
-        }}
-        style={styles.webview}
-      />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.webview}>
+        <WebView
+          ref={webViewRef}
+          originWhitelist={['*']}
+          javaScriptEnabled={true}
+          onNavigationStateChange={handleNavigationStateChange}
+          source={{uri: outUrl}}
+          useWebKit={true}
+          allowFileAccessFromFileURLs={true}
+          allowUniversalAccessFromFileURLs={true}
+          onContentProcessDidTerminate={() => {
+            webViewRef.current.reload();
+          }}
+          style={styles.webview}
+        />
+      </KeyboardAvoidingView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  backgroundStyle: {
+    backgroundColor: '#ffffff',
+    flex: 1,
+  },
   header: {
     height:
       Platform.OS === 'android'
@@ -173,7 +168,6 @@ const styles = StyleSheet.create({
   },
   webview: {
     flex: 1,
-    marginBottom: Platform.OS === 'ios' ? 20 : 0,
   },
 });
 

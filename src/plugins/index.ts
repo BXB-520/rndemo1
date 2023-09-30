@@ -6,6 +6,13 @@ import {ImagePickerResponse, launchCamera} from 'react-native-image-picker';
 import {DownloadFile} from '../function/downloadFile';
 import {hasPicturePermission} from '../promise/picturePromise';
 import {hasFilePermission} from '../promise/filePromise';
+import NfcManager, {NfcTech} from 'react-native-nfc-manager';
+import {
+  getApiVersion,
+  registerApp,
+  shareWebpage,
+} from 'react-native-wechat-lib';
+import {WX_KEY, ANDROID_ID} from '../constants';
 
 /** 打开webview */
 const handelWebview = (
@@ -85,27 +92,38 @@ const handelDownloadImage = async (
 };
 
 /** 批量下载文件 */
-const handelDownloadFile = async (params: {
+const handelDownloadFile = async (
   params: {
-    token: string;
-    FileList: {url: string; fileType: 'xlsx' | 'pdf' | 'docx'}[];
-  };
-}) => {
+    params: {
+      token: string;
+      FileList: {url: string; fileType: 'xlsx' | 'pdf' | 'docx' | 'apk'};
+    };
+  },
+  postMessageToWeb: Function,
+) => {
   return new Promise(async resolve => {
     if (await hasFilePermission()) {
-      params.params.FileList.map(
-        (items: {url: string; fileType: 'xlsx' | 'pdf' | 'docx'}) => {
-          const result = DownloadFile(
-            items.url,
-            params.params.token,
-            items.fileType,
-          );
-          console.log('result', result);
-        },
+      postMessageToWeb({...params, value: true});
+      const {FileList, token} = params.params;
+
+      let limit = 0;
+      /** 进度下载发送 */
+      const postNewProgess = (percentage: any) => {
+        if (percentage >= limit) {
+          limit = limit + 10;
+          postMessageToWeb({...params, status: '2', value: percentage});
+        }
+      };
+
+      await DownloadFile(
+        FileList.url,
+        token,
+        FileList.fileType,
+        postNewProgess,
       );
-      resolve({...params, model: 200, value: true});
+      resolve({...params, status: '2', value: 100});
     } else {
-      resolve({...params, model: 200, value: false});
+      resolve({...params, status: '0', value: false});
     }
   });
 };
@@ -166,6 +184,71 @@ const handelQrcode = (
   return {...params, value: true};
 };
 
+/** 使用NFC */
+const handeluseNfc = async (
+  params: {params: {type: 'open' | 'close'}},
+  postMessageToWeb: Function,
+) => {
+  return new Promise(async resolve => {
+    postMessageToWeb({...params, value: true});
+
+    if (params.params.type === 'open') {
+      NfcManager.start();
+      try {
+        // register for the NFC tag with NDEF in it
+        await NfcManager.requestTechnology(NfcTech.Ndef);
+        // the resolved tag object will contain `ndefMessage` property
+        const tag = await NfcManager.getTag();
+        console.log('Tag found', tag);
+        resolve({...params, status: '2', value: {tag}});
+      } catch {
+        console.log('useNfc-Error');
+      } finally {
+        NfcManager.cancelTechnologyRequest();
+      }
+    } else {
+      NfcManager.cancelTechnologyRequest();
+      resolve({...params, status: '2', value: {tag: {}}});
+    }
+  });
+};
+
+/** 微信分享 */
+const handleOpenWxShare = (params: {
+  params: {
+    title: string;
+    description: string;
+    thumbImageUrl: string;
+    webpageUrl: string;
+  };
+}) => {
+  return new Promise(async resolve => {
+    const {title, description, thumbImageUrl, webpageUrl} = params.params;
+    registerApp(WX_KEY, ANDROID_ID).then(async res => {
+      console.log('registerApp: ' + res);
+      if (res) {
+        getApiVersion().then(num => {
+          console.log('test: ' + num);
+          if (num) {
+            shareWebpage({
+              title,
+              description,
+              thumbImageUrl,
+              webpageUrl,
+              scene: 0,
+            });
+            resolve({...params, value: true});
+          } else {
+            resolve({...params, status: '0', value: '未安装微信App'});
+          }
+        });
+      } else {
+        resolve({...params, status: '0', value: '微信sdk错误'});
+      }
+    });
+  });
+};
+
 export {
   handelWebview,
   handelStatusBarHeight,
@@ -176,4 +259,6 @@ export {
   HistoryStorage,
   handelCameraPlugin,
   handelQrcode,
+  handeluseNfc,
+  handleOpenWxShare,
 };
