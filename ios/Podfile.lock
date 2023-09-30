@@ -347,6 +347,8 @@ PODS:
     - React-Core
   - react-native-image-resizer (1.4.5):
     - React-Core
+  - react-native-nfc-manager (3.14.8):
+    - React-Core
   - react-native-safe-area-context (4.5.3):
     - RCT-Folly
     - RCTRequired
@@ -507,6 +509,7 @@ DEPENDENCIES:
   - "react-native-cameraroll (from `../node_modules/@react-native-camera-roll/camera-roll`)"
   - react-native-image-picker (from `../node_modules/react-native-image-picker`)
   - react-native-image-resizer (from `../node_modules/react-native-image-resizer`)
+  - react-native-nfc-manager (from `../node_modules/react-native-nfc-manager`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-user-agent (from `../node_modules/react-native-user-agent`)
   - react-native-webview (from `../node_modules/react-native-webview`)
@@ -600,6 +603,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-image-picker"
   react-native-image-resizer:
     :path: "../node_modules/react-native-image-resizer"
+  react-native-nfc-manager:
+    :path: "../node_modules/react-native-nfc-manager"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-user-agent:
@@ -683,6 +688,7 @@ SPEC CHECKSUMS:
   react-native-cameraroll: 8cc80e0922a6a432938a26f3b50714adcb2adb5f
   react-native-image-picker: 5fcac5a5ffcb3737837f0617d43fd767249290de
   react-native-image-resizer: d9fb629a867335bdc13230ac2a58702bb8c8828f
+  react-native-nfc-manager: 15a9dd22258cb8e1a6bbb71179baf5c9137a933d
   react-native-safe-area-context: b8979f5eda6ed5903d4dbc885be3846ea3daa753
   react-native-user-agent: a90a1e839b99801baad67a73dd6f361a52aa3cf1
   react-native-webview: b8ec89966713985111a14d6e4bf98d8b54bced0d

@@ -335,7 +335,8 @@ function HomeScreen({navigation, route}: any): JSX.Element {
           allowFileAccessFromFileURLs={true}
           allowUniversalAccessFromFileURLs={true}
           overScrollMode="never" //安卓去除白色拉动动画
-          scrollEnabled
+          scrollEnabled={false} //禁止ios 键盘弹出的滑动
+          hideKeyboardAccessoryView={true} //禁止ios键盘上的完成栏
           onContentProcessDidTerminate={() => {
             webViewRef.current.reload();
           }}
